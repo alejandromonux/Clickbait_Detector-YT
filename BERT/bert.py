@@ -337,7 +337,7 @@ def fineTuningBert(dataset):
         # save the best model
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss
-            torch.save(model.state_dict(), 'saved_weights.pt')
+            torch.save(model.state_dict(), './BERT/saved_weights.pt')
 
         # append training and validation loss
         train_losses.append(train_loss)
@@ -458,7 +458,7 @@ def evaluate(model, val_dataloader,device):
 
 def test(model,test_seq, device, test_mask, test_y):
     # load weights of best model
-    path = 'saved_weights.pt'
+    path = './BERT/saved_weights.pt'
     model.load_state_dict(torch.load(path))
     with torch.no_grad():
         preds = model(test_seq.to(device), test_mask.to(device))
