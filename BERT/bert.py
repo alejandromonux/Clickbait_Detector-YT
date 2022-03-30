@@ -1,5 +1,5 @@
 import time
-
+import os
 from joblib.logger import format_time
 from sklearn.metrics import classification_report
 from torch.nn import BCEWithLogitsLoss
@@ -18,7 +18,7 @@ def bertEncoding(db_option):
     array = []
     i = 0
     #with Bert tokenizer or not
-    database = readFile('./DataRetrieval/clean_database.json') if (db_option == 1) else readFile('./DataRetrieval/BERT_clean_database.json')
+    database = readFile(os.getcwd()+'\clean_database.json') if (db_option == 1) else readFile(os.getcwd()+'\BERT_clean_database.json')
     #Load tokenizer part of the model
     tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
     # Load pre-trained model (weights)
@@ -68,7 +68,7 @@ def bertEncoding(db_option):
         i += 1
 
     print("Hem acabat")
-    writeFile('./DataRetrieval/encoded_database.json', database)
+    writeFile(os.getcwd()+"\encoded_database.json", database)
 
 def bertPreprocessing(database):
     from transformers import AutoTokenizer
@@ -81,7 +81,7 @@ def bertPreprocessing(database):
                                       "attention_mask": newtitle["attention_mask"]
                                       }
         i+=1
-    writeFile("./DataRetrieval/BERT_clean_database.json", database)
+    writeFile(os.getcwd()+"\BERT_clean_database.json", database)
 
 def plotTheFitting(history):
     from matplotlib import pyplot as plt
@@ -109,7 +109,7 @@ def plotTheFitting(history):
 def bertEmbeddings_bad():
     array = []
     i = 0
-    database = readFile('./DataRetrieval/database.json')
+    database = readFile(os.getcwd()+"\database.json")
     #Load tokenizer part of the model
     tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
     # Load pre-trained model (weights)
@@ -153,7 +153,7 @@ def bertEmbeddings_bad():
         i += 1
 
     print("Hem acabat")
-    writeFile('./DataRetrieval/encoded_database.json', database)
+    writeFile(os.getcwd()+"\encoded_database.json", database)
 
 def adjustSizeForTensors(array,val):
     # Miramos de poner todas las entrada de igual longitud

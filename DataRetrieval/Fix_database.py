@@ -1,5 +1,5 @@
 from Tools.files import writeFile
-
+import os
 
 def dabasefix(revised_db, new_db):
     finish = False
@@ -20,10 +20,10 @@ def dabasefix(revised_db, new_db):
             while tryAgain:
                 try:
                     rating = input("No rating?")
-                    if rating != "finish" and rating != "next":
+                    if rating != "f" and rating != "n": #f = finish; n = next
                         rating = int(rating)
                     else:
-                        if rating == "finish":
+                        if rating == "f":
                             finish = True
                         else:
                             next = True
@@ -40,17 +40,18 @@ def dabasefix(revised_db, new_db):
         else:
             found=False
 
-    writeFile("./DataRetrieval/adjusted_database.json", new_db)
+    writeFile(os.getcwd()+"\\adjusted_database.json", new_db)
 
 def databaseAdding(old_db, new_db):
-
+    found = False
     #TODO: REVISAR
     for r_item in old_db["list"]:
         found = False
         for n_item in new_db["list"]:
             if r_item["title"] == n_item["title"]:
                 found = True
-                break;
+                break
+
         if not found:
             # We add the element missing from the old one to the new one
             new_db["list"].append(r_item)
@@ -67,7 +68,7 @@ def databaseAdding(old_db, new_db):
             item["rating"] = 2
 
     print(len(new_db["list"]))
-    writeFile("./DataRetrieval/adjusted_database.json", new_db)
+    writeFile(os.getcwd()+"\\adjusted_database.json", new_db)
 
 def noRepeats(database):
 
@@ -81,4 +82,4 @@ def noRepeats(database):
                     database["list"].pop(database["list"].index(check))
 
     print(len(database["list"]))
-    writeFile("./DataRetrieval/adjusted_database.json", database)
+    writeFile(os.getcwd()+"\\adjusted_database.json", database)
