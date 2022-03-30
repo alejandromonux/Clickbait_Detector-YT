@@ -1,3 +1,5 @@
+import os
+
 import matplotlib
 import matplotlib.pyplot as plt
 from kneed import KneeLocator
@@ -33,7 +35,7 @@ def plotTheElbow(y_values, x_value,title):
 
 def kmeans_test(k_clusters):
     from Tools.files import readFile
-    database = readFile("./DataRetrieval/encoded_database.json")
+    database = readFile(os.getcwd()+"\encoded_database.json")
     array_of_titles = getTitles(database)
     kmeans = KMeans(init="random",
                     n_clusters=k_clusters,
@@ -57,11 +59,11 @@ def kmeans_test(k_clusters):
     for l in labels:
         database["list"][i]["rating"] = l
         i+=1
-    writeFile("./DataRetrieval/encoded_database.json",database)
+    writeFile(os.getcwd()+"\encoded_database.json",database)
 
 def elbowmethod_2():
     from Tools.files import readFile
-    database = readFile("./DataRetrieval/encoded_database.json")
+    database = readFile(os.getcwd()+"\encoded_database.json")
     array_of_titles = getTitles(database)
     args = {
         "init": "random",
@@ -85,7 +87,7 @@ def elbowmethod_2():
 
 def elbowmethod():
     from Tools.files import readFile
-    database = readFile("./DataRetrieval/encoded_database.json")
+    database = readFile(os.getcwd()+"\encoded_database.json")
     array_of_titles = getTitles(database)
     args = {
         "init": "random",
