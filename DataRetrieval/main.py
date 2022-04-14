@@ -11,7 +11,7 @@ from sklearn.cluster import KMeans
 
 from BERT.bert import bertPreprocessing, fineTuningBert
 from Clustering.k_means_clustering import kmeans_test, elbowmethod, elbowmethod_2
-from DataRetrieval.Fix_database import dabasefix, databaseAdding, noRepeats
+from DataRetrieval.Fix_database import dabasefix, databaseAdding, noRepeats, ReviseAllRatingsFromClass, removeTheStrings
 from Encoding.encoding_test import bagOfWords, tf_df
 from Tools.files import writeFile, readFile
 from Clustering import k_means_clustering
@@ -199,6 +199,7 @@ if __name__ == "__main__":
     option = sys.argv[1]
     #TODO: PROBAR A USAR EL READ Y WRITE DE FILES.PY EN VEZ DE LOS DEL MAIN Y VER CÓMO FUNCIONA PARA TEMA DIRECTORIOS
     option2 = sys.argv[2]
+    option3 = sys.argv[3]
     # goToFunc(option)
     if option == '1':
         channelLoop()
@@ -252,9 +253,13 @@ if __name__ == "__main__":
         elif option2 == '3':
             databaseAdding(readFile(os.getcwd()+"\old_adjusted_database.json"), readFile(os.getcwd()+"\\adjusted_database.json"))
             #noRepeats(readFile(os.getcwd()+"\\adjusted_database.json"))
-        else:
+        elif option2 == '4':
             noRepeats(readFile(os.getcwd()+"\\adjusted_database.json"))
+        elif option2 == '5':
+            ReviseAllRatingsFromClass(readFile(os.getcwd()+"\\adjusted_database.json"), rating=int(option3))
+        else:
+            removeTheStrings(readFile(os.getcwd()+"\\adjusted_database.json"))
     elif option == '7':
         databaseBERTCleanup(os.getcwd()+"\\adjusted_database.json")
         #From cleanup we go on to training
-        fineTuningBert(os.getcwd()+"\BERT_clean_database.json")
+        fineTuningBert(os.getcwd()+"\\BERT_clean_database.json")

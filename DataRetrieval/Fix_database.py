@@ -83,3 +83,43 @@ def noRepeats(database):
 
     print(len(database["list"]))
     writeFile(os.getcwd()+"\\adjusted_database.json", database)
+
+def ReviseAllRatingsFromClass(database, rating):
+    import random
+    #We randomize the array for better results
+    random.shuffle(database["list"])
+    finish = False
+    for item in database["list"]:
+        if item["rating"] == rating:
+            print(item["title"])
+            print("rating:" + str(item["rating"]) + "\n")
+
+            tryAgain = True
+            while tryAgain:
+                try:
+                    new_rating = input("No rating?")
+                    if new_rating != "f" and new_rating != "n":  # f = finish; n = next
+                        new_rating = int(new_rating)
+                        database["list"][database["list"].index(item)]["rating"] = new_rating
+                    elif new_rating == "f":
+                        finish = True
+                    tryAgain = False
+                except:
+                    tryAgain = True
+            if finish:
+                break
+
+    writeFile(os.getcwd()+"\\adjusted_database.json", database)
+
+
+def removeTheStrings(database):
+
+    for item in database["list"]:
+        if item["rating"] == "" or item["rating"] == "0":
+            database["list"][database["list"].index(item)]["rating"] = 0
+        elif item["rating"] == "1":
+            database["list"][database["list"].index(item)]["rating"] = 1
+        elif item["rating"] == "2":
+            database["list"][database["list"].index(item)]["rating"] = 2
+
+    writeFile(os.getcwd()+"\\adjusted_database.json", database)
