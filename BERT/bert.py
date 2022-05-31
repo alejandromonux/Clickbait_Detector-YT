@@ -182,11 +182,29 @@ def adjustSizeForTensors(array,val):
     return array
 
 def buildDataset(database, batch_size):
+    import random
+    #We randomize the array for better results
+    random.shuffle(database["list"])
+    random.shuffle(database["list"])
+    random.shuffle(database["list"])
     titles = []
     ratings = []
+    count_0 = 0
+    count_1 = 0
+    count_2 = 0
+    max_examples = 100000#610
     for item in database["list"]:
-        titles.append(item["title"])
-        ratings.append(item["rating"])
+        if (count_0 < max_examples and item["rating"] == 0) or (count_1 < max_examples and item["rating"] == 1) or (count_2 < max_examples and item["rating"] == 2):
+            titles.append(item["title"])
+            ratings.append(item["rating"])
+            if item["rating"] == 0:
+                count_0+=1
+            elif item["rating"] == 1:
+                count_1+=1
+            elif item["rating"] == 2:
+                count_2+=1
+
+
 
     #Split the database
     train_text, temp_text, train_labels, temp_labels = train_test_split(titles, ratings,
@@ -337,7 +355,7 @@ def fineTuningBert(dataset):
         # save the best model
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss
-            torch.save(model.state_dict(), './BERT/saved_weights.pt')
+            torch.save(model.state_dict(), '..\\BERT\\saved_weights.pt')
 
         # append training and validation loss
         train_losses.append(train_loss)
@@ -457,11 +475,27 @@ def evaluate(model, val_dataloader,device):
     return avg_loss, total_preds
 
 def test(model,test_seq, device, test_mask, test_y):
+    from sklearn.metrics import confusion_matrix
+    import seaborn as sns
+    import matplotlib.pyplot as plt
     # load weights of best model
-    path = './BERT/saved_weights.pt'
+    path = '..\\BERT\saved_weights.pt'
     model.load_state_dict(torch.load(path))
     with torch.no_grad():
         preds = model(test_seq.to(device), test_mask.to(device))
         preds = preds.detach().cpu().numpy()
         preds = np.argmax(preds, axis=1)
+        #Output a classification report
         print(classification_report(test_y, preds))
+        #Print and plot the confusion matrix
+        cf_matrix = confusion_matrix(test_y, preds)
+        print(cf_matrix)
+        #We plot the matrix
+        ax = sns.heatmap(cf_matrix, annot=True, cmap='Blues')
+        ax.set_title('Confusion Matrix\n\n');
+        ax.set_xlabel('\nPredicted Values')
+        ax.set_ylabel('Actual Values ');
+        ax.xaxis.set_ticklabels(['0', '1','2'])
+        ax.yaxis.set_ticklabels(['0', '1','2'])
+        #Display the visualization of the Confusion Matrix.
+        plt.show()
