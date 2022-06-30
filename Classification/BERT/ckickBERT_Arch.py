@@ -2,7 +2,7 @@ from torch import nn
 
 
 class clickBERT_Arch(nn.Module):
-    def __init__(self, bert):
+    def __init__(self, bert,classes):
         super(clickBERT_Arch, self).__init__()
         self.bert = bert
         # dropout layer
@@ -17,10 +17,11 @@ class clickBERT_Arch(nn.Module):
         self.fc3 = nn.Linear(512, 512)
         self.fc4 = nn.Linear(512, 256)
         self.fc5 = nn.Linear(256, 64)
-        self.fc6 = nn.Linear(64, 3)
+        self.fc6 = nn.Linear(64, classes)
         # softmax activation function
         #self.OtputFunction = nn.Softmax(dim=1)
-        self.OtputFunction = nn.LogSoftmax(dim=1)
+        self.OtputFunction = nn.LogSoftmax(dim=1) #Softmax perque potser el problema no es linealment separable
+        #Potser
 
     # define the forward pass
     def forward(self, sent_id, mask):

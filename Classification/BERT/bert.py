@@ -2,16 +2,15 @@ import time
 import os
 from joblib.logger import format_time
 from sklearn.metrics import classification_report
-from torch.nn import BCEWithLogitsLoss
-from torch.nn.functional import cross_entropy
-from BERT.ckickBERT_Arch import clickBERT_Arch
+from Classification.BERT.ckickBERT_Arch import clickBERT_Arch
 from Tools.files import readFile, writeFile
-from transformers import BertTokenizer, BertModel, AutoModel
+from transformers import BertTokenizer, BertModel
 import numpy as np
 import torch
 import torch.nn as nn
 from sklearn.model_selection import train_test_split
-from transformers import AutoModel, BertTokenizerFast
+from transformers import AutoModel
+
 
 #MAKES AVERAGE OF ALL 14 HIDDEN UNITS
 def bertEncoding(db_option):
@@ -192,17 +191,25 @@ def buildDataset(database, batch_size):
     count_0 = 0
     count_1 = 0
     count_2 = 0
-    max_examples = 100000#610
+
+    max_examples = 1000#610
     for item in database["list"]:
-        if (count_0 < max_examples and item["rating"] == 0) or (count_1 < max_examples and item["rating"] == 1) or (count_2 < max_examples and item["rating"] == 2):
-            titles.append(item["title"])
-            ratings.append(item["rating"])
+        next = False
+        #if (count_0 < max_examples and item["rating"] == 0) or (count_1 < max_examples and item["rating"] == 1) or (count_2 < max_examples and item["rating"] == 2):
+        for i in range(0,2):
+            if (i is item["rating"]) and ratings.count(i) >= max_examples:
+                next = True
+        if next: continue
+        titles.append(item["title"])
+        ratings.append(item["rating"])
+        """
             if item["rating"] == 0:
                 count_0+=1
             elif item["rating"] == 1:
                 count_1+=1
             elif item["rating"] == 2:
                 count_2+=1
+            """
 
 
 
@@ -233,12 +240,13 @@ def buildDataset(database, batch_size):
     for item in val_text:
         val_seq.append(item["tokens"])
         val_mask.append(item["attention_mask"])
+    #Separamos para montar luego el tensorDataset de VALIDATION
     test_y = test_labels
     for item in test_text:
         test_seq.append(item["tokens"])
         test_mask.append(item["attention_mask"])
-    #TODO: PREPROCESAR Y PONER EN CADA TENSOR TODOS LOS ARRAYS AL MISMO TAMAÑO
 
+    #TODO: PREPROCESAR Y PONER EN CADA TENSOR TODOS LOS ARRAYS AL MISMO TAMAÑO
     #Convertimos el train to tensors
     train_seq=  torch.tensor(adjustSizeForTensors(train_seq,0))
     train_mask= torch.tensor(adjustSizeForTensors(train_mask,1))
@@ -247,9 +255,9 @@ def buildDataset(database, batch_size):
     val_seq =   torch.tensor(adjustSizeForTensors(val_seq,0))
     val_mask =  torch.tensor(adjustSizeForTensors(val_mask,1))
     val_y =     torch.tensor(val_y)
-
+    #Creamos los tensors de test
     test_seq = torch.tensor(adjustSizeForTensors(test_seq,0))
-    test_mask = torch.tensor(adjustSizeForTensors(test_mask,0))
+    test_mask = torch.tensor(adjustSizeForTensors(test_mask,1))
     test_y = torch.tensor(test_labels)
     # wrap tensors
     train_data = TensorDataset(train_seq, train_mask, train_y)
@@ -275,13 +283,13 @@ def buildDataset(database, batch_size):
 
     return train_data, train_sampler, train_dataloader, val_data, val_sampler, val_dataloader, train_labels, test_seq, test_mask, test_y
 
-def expandModel(bert, device):
+def expandModel(bert, device,classnum):
     #Bloqueamos los pesos de las capas preentrenadas.
     for param in bert.parameters():
         param.requires_grad = False
 
     # pass the pre-trained BERT to our define architecture
-    model = clickBERT_Arch(bert)
+    model = clickBERT_Arch(bert,classes=classnum)
     # push the model to GPU
     model = model.to(device)
     return model
@@ -295,7 +303,7 @@ def getOptimizer(model):
                       lr=1e-5)  # learning rate
     return optimizer
 
-def fineTuningBert(dataset):
+def fineTuningBert(dataset,classnum):
     batch_size = 32
     #Load database and device
     database = readFile(dataset)
@@ -314,7 +322,7 @@ def fineTuningBert(dataset):
     test_seq,\
     test_mask,\
     test_y    = buildDataset(database, batch_size)
-    model = expandModel(bert, device)
+    model = expandModel(bert, device,classnum)
     optimizer = getOptimizer(model)
     from sklearn.utils.class_weight import compute_class_weight
     # compute the class weights
@@ -329,7 +337,8 @@ def fineTuningBert(dataset):
     # define the loss function
     #cross_entropy = nn.NLLLoss(weight=weights)
     global cross_entropy
-    cross_entropy= nn.NLLLoss(weight=weights)
+    cross_entropy = nn.NLLLoss(weight=weights)
+    #cross_entropy= nn.BCELoss(weight=weights)
     # number of training epochs
     epochs = 100
 
@@ -355,7 +364,7 @@ def fineTuningBert(dataset):
         # save the best model
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss
-            torch.save(model.state_dict(), '..\\BERT\\saved_weights.pt')
+            torch.save(model.state_dict(), 'saved_weights.pt')
 
         # append training and validation loss
         train_losses.append(train_loss)
@@ -392,8 +401,9 @@ def train(model, train_dataloader, device, optimizer):
         # get model predictions for the current batch
         preds = model(sent_id, mask)
         # compute the loss between actual and predicted values
-        loss = cross_entropy(preds, labels)
 
+        loss = cross_entropy(preds, labels)
+        #loss = cross_entropy(torch.flatten(preds) , labels)
 
         # add on to the total loss
         total_loss = total_loss + loss.item()
@@ -479,7 +489,7 @@ def test(model,test_seq, device, test_mask, test_y):
     import seaborn as sns
     import matplotlib.pyplot as plt
     # load weights of best model
-    path = '..\\BERT\saved_weights.pt'
+    path = 'saved_weights.pt'
     model.load_state_dict(torch.load(path))
     with torch.no_grad():
         preds = model(test_seq.to(device), test_mask.to(device))
@@ -495,7 +505,7 @@ def test(model,test_seq, device, test_mask, test_y):
         ax.set_title('Confusion Matrix\n\n');
         ax.set_xlabel('\nPredicted Values')
         ax.set_ylabel('Actual Values ');
-        ax.xaxis.set_ticklabels(['0', '1','2'])
-        ax.yaxis.set_ticklabels(['0', '1','2'])
+        ax.xaxis.set_ticklabels(['0', '1'])
+        ax.yaxis.set_ticklabels(['0', '1'])
         #Display the visualization of the Confusion Matrix.
         plt.show()
