@@ -133,3 +133,7 @@ dmypy.json
 .idea/inspectionProfiles/profiles_settings.xml
 .idea/Clickbait_Detector-YT.iml
 .idea/aws.xml
+
+#Deprecated Local dbs
+DataRetrieval/post-first-class
+DataRetrieval/pre-frst-class
