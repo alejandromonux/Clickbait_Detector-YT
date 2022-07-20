@@ -1,3 +1,4 @@
+import math
 import os
 
 import matplotlib
@@ -8,7 +9,8 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import StandardScaler
 
-from Tools.files import writeFile
+from Tools.files import writeFile, readFile
+
 
 def plot3D(centroids, data, labels,classes):
     colors = ['brown', 'purple', 'cyan', 'green', 'orange']
@@ -45,9 +47,29 @@ def resultsAnalysis(model, data, labels, classes):
                 group_x.append(data_transformed[j][0])
                 group_y.append(data_transformed[j][1])
         plt.scatter(group_x, group_y, color=colors[i])
-        plt.scatter(np.average(group_x)+centroids[i][0], np.average(group_y)+centroids[i][1], marker="X", s=120, color=colors_centroids[i])
+        this_centroid = [np.average(group_x)+centroids[i][0],np.average(group_y)+centroids[i][1]]
+        plt.scatter(this_centroid[0], this_centroid[1], marker="X", s=120, color=colors_centroids[i])
+        plt.show()
 
-    plt.show()
+        #Revisar los ejemplos que se salen de la media y analizarlos
+        print("CLASE %s" ,(i))
+        titulos = [[],[]]
+        database = readFile(os.getcwd() + "\database.json")
+        for item in database["list"]:
+            if item["rating"] == i:
+                titulos[i].append(item["title"])
+
+        acum_dist = []
+        for j in range(len(group_x)):
+            point = [group_x[j], group_y[j]]
+            from scipy.spatial import distance
+            acum_dist.append(distance.euclidean(point,this_centroid))
+        from numpy import average
+        avg = average(acum_dist)
+        for i in range(len(acum_dist)):
+            if acum_dist[i] > avg:
+                print(titulos[i][:])
+    print("DEBUG")
 
 
 def getTitles(database):
