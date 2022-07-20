@@ -69,6 +69,62 @@ def bertEncoding(db_option):
     print("Hem acabat")
     writeFile(os.getcwd()+"\encoded_database.json", database)
 
+def bertencodingsArray(array,array_np,y):
+    file = {"x":[]}
+    tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
+    # Load pre-trained model (weights)
+    model = BertModel.from_pretrained('bert-base-cased',
+                                      output_hidden_states=True,  # Whether the model returns all hidden-states.
+                                      )
+    # Put the model in "evaluation" mode, meaning feed-forward operation.
+    model.eval()
+    for i in range(len(array)):
+        indexed_tokens = array[i]["tokens"]
+        segments_ids = array[i]["positions"]
+
+        tokens_tensor = torch.tensor([indexed_tokens])
+        segments_tensors = torch.tensor([segments_ids])
+
+        with torch.no_grad():
+            outputs = model(tokens_tensor, segments_tensors)
+            hidden_states = outputs[2]
+            token_embeddings = torch.stack(hidden_states, dim=0)
+            token_embeddings.size()
+            token_embeddings = torch.squeeze(token_embeddings, dim=1)
+            token_embeddings = token_embeddings.permute(1, 0, 2)
+            token_vecs = hidden_states[-2][0]
+            sentence_embedding = torch.mean(token_vecs, dim=0)
+
+        from Classification.DecisionTree.TreeClass import VideoInfo
+        if type(array_np[0]) is not dict:
+            feats=VideoInfo(False,array_np[i],"","0","0","0","0")
+            comments=[]
+        else:
+            n_item = array_np[i]
+            feats=VideoInfo(False,n_item["title"],"",
+                                  n_item["views"],
+                                  n_item["likes"],
+                                  n_item["subscribers"],
+                                  n_item["category"])
+            comments=n_item["comments"]
+        array[i]={"title":sentence_embedding.tolist(),"features":feats.returnAsArray(False),"comments":comments}
+        file["x"].append(array[i])
+    print("Hem acabat")
+    file["y"]=y
+    return file
+
+
+def bertPreprocessingArray(array):
+    from transformers import AutoTokenizer
+    tokenizer = AutoTokenizer.from_pretrained("bert-base-cased")
+    for i in range(len(array)):
+        newtitle = tokenizer(array[i])
+        array[i] = {"tokens": newtitle["input_ids"],
+                                        "positions": newtitle["token_type_ids"],
+                                        "attention_mask": newtitle["attention_mask"]
+                                        }
+    return array
+
 def bertPreprocessing(database):
     from transformers import AutoTokenizer
     tokenizer = AutoTokenizer.from_pretrained("bert-base-cased")
