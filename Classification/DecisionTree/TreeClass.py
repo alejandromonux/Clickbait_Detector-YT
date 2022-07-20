@@ -34,6 +34,7 @@ class VideoInfo:
             #sensationalistAdjectives = self.hasSensationalistAdjectives(title)
             self.capitalLetterWordsCount = self.countCapitalLetterWords(title)
             self.wordCount = self.getWordCount(title)
+            self.subs = atoi(subs)
             self.views = atoi(visitas)
             self.likes = atoi(likes)
             try:
@@ -43,7 +44,7 @@ class VideoInfo:
                 self.subsPerView=self.views
             self.encodedTitle=encoded_title
             #relaciónVisitas_Subs = relacion_visitas_subs
-            self.category = category
+            self.category = atoi(category)
         else:
             self.emojiCount = 0
             self.hasTypicalPhrase = False
@@ -55,15 +56,14 @@ class VideoInfo:
             self.views = 0
             self.subsPerView = 0
             self.likes = 0
-            # relaciónVisitas_Subs = 0
+            self.subs = 0
             self.category = 0
 
 
-    def returnAsArray(self):
+    def returnAsArray(self, merge):
         phrase = 1 if self.hasTypicalPhrase == True else 0
         bignumber=1 if self.bigNum == True else 0
-        return [#self.encodedTitle,
-                self.emojiCount,
+        out = [ self.emojiCount,
                 phrase,
                 self.superlatives,
                 self.punctuationCount,
@@ -71,9 +71,15 @@ class VideoInfo:
                 self.sensationalistAdjectives,
                 self.capitalLetterWordsCount,
                 self.views,
+                self.subs,
                 self.subsPerView,
                 self.likes,
                 self.category]
+        if merge:
+            for item in self.encodedTitle:
+                out.append(item)
+        return out
+
 
     def ComptaEmojis(self,title) -> int:
         result = re.findall(r'[^\w\s,.]',title)

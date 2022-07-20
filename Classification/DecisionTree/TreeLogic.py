@@ -1,6 +1,7 @@
 import os
 from io import StringIO
 
+import numpy as np
 from sklearn.tree import DecisionTreeClassifier, export_graphviz
 
 from Classification.DecisionTree import TreeClass
@@ -12,10 +13,38 @@ def initializeTree() -> DecisionTreeClassifier:
     tree.criterion = "entropy"
     return tree
 
+def constructDataFromIndexes(arrays, onlytitles, merge):
+    data_Titles,titles = constructData(os.getcwd() + "/adjusted_database.json", onlytitles=True, merge=False)
+    data_Features,titles = constructData(os.getcwd() + "/adjusted_database.json", onlytitles=False, merge=False)
 
-def constructData(database, onlytitles):
+    train_data_Titles = {"x":np.array(data_Titles["x"])[arrays[0]], "y":np.array(data_Titles["y"])[arrays[0]]}
+    test_data_Titles = {"x":np.array(data_Titles["x"])[arrays[1]], "y":np.array(data_Titles["y"])[arrays[1]]}
+    train_data_Features = {"x":np.array(data_Features["x"])[arrays[0]], "y":np.array(data_Features["y"])[arrays[0]]}
+    test_data_Features =  {"x":np.array(data_Features["x"])[arrays[1]], "y":np.array(data_Features["y"])[arrays[1]]}
+
+    database = readFile(os.getcwd() + "/adjusted_database.json")
+    train = np.array(database["list"])[arrays[0]]
+    test = np.array(database["list"])[arrays[1]]
+    train_comments = []
+    test_comments = []
+    for item in train:
+        try:
+            train_comments.append(item["comments"])
+        except:
+            train_comments.append([])
+    for item in test:
+        try:
+            test_comments.append(item["comments"])
+        except:
+            test_comments.append([])
+
+    return train_data_Titles,test_data_Titles,train_data_Features,test_data_Features,train_comments,test_comments
+
+
+def constructData(database, onlytitles, merge):
     data = {"x": [],
             "y": []}
+    titles = []
     database = readFile(database)
     database_encoded = readFile(os.getcwd() + "\encoded_database.json")
     i = 0
@@ -23,16 +52,17 @@ def constructData(database, onlytitles):
         videoinformation = TreeClass.VideoInfo(False, example["title"], database_encoded["list"][i]["title"],
                                                example["views"], example["likes"], example["subscribers"],
                                                example["category"])
-        if not onlytitles: data["x"].append(videoinformation.returnAsArray())
-        else: data["x"].append(videoinformation.encodedTitle)
+        if not onlytitles: data["x"].append(videoinformation.returnAsArray(merge))
+        else : data["x"].append(videoinformation.encodedTitle)
         data["y"].append(example["rating"])
+        titles.append(example["title"])
         i += 1
-    return data
+    return data,titles
 
 
 def getBestFeatures():
     tree = initializeTree()
-    data = constructData(os.getcwd() + "\database.json")
+    data = constructData(os.getcwd() + "\database.json",False)
     tree.fit(data["x"], data["y"])
     # TODO: encontrar las features y cuáles son mejores
     feat_importance = tree.tree_.compute_feature_importances(
@@ -41,7 +71,7 @@ def getBestFeatures():
     out = StringIO()
     # if not os.path.exists(os.getcwd()+'/../DecisionTree/tree.dot'):
     #    os.makedirs(os.getcwd()+'/../DecisionTree/tree.dot')
-    out = export_graphviz(tree, out_file=os.getcwd() + '/../DecisionTree/tree.dot')
+    out = export_graphviz(tree, out_file=os.getcwd() + '/../Classification/DecisionTree/tree.dot')
 
 
 def findAverage(num_classes, trim):
