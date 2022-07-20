@@ -1,8 +1,17 @@
-from Tools.files import writeFile
+from Tools.files import writeFile, readFile
 import os
 
+def ratingsFromAll():
+    e_database = readFile(os.getcwd() + "\encoded_database.json")
+    database = readFile(os.getcwd() + "\database.json")
+    i = 0
+    for item in e_database["list"]:
+        database["list"][i]["rating"] = item["rating"]
+        i += 1
+    writeFile(os.getcwd() + "\database.json", database)
+
 def isDubious(dubiousItem):
-    return dubiousItem.capitalLetterWordsCount>=1 or dubiousItem.emojiCount >= 1 or dubiousItem.superlatives>=1 or dubiousItem.punctuationCount >= 1
+    return dubiousItem.capitalLetterWordsCount>=1 or dubiousItem.emojiCount >= 1 or dubiousItem.superlatives>=1 or dubiousItem.punctuationCount > 1
 
 def dabasefix(revised_db, new_db, rating_limit, checkDubiousOnes):
     finish = False
@@ -15,6 +24,11 @@ def dabasefix(revised_db, new_db, rating_limit, checkDubiousOnes):
                 n_item["rating"]= r_item["rating"]
                 found = True
                 break
+        try:
+            found = True if n_item["revised"] == 1 else found
+        except:
+            #Este elemento no tiene esto
+            found = found
         if not found:
             from Classification.DecisionTree.TreeClass import VideoInfo
             dubiousItem = VideoInfo(False, n_item["title"],"",
@@ -29,38 +43,52 @@ def dabasefix(revised_db, new_db, rating_limit, checkDubiousOnes):
                 print(n_item["title"])
                 print("rating: "+str(n_item["rating"]))
                 try:
-                    print("SubsPerView: "+dubiousItem.subsPerView)
+                    print("Subs: " + str(dubiousItem.subs))
+                    print("SubsPerView: " + str(dubiousItem.subsPerView))
+                    print("Views: " + str(dubiousItem.views))
+                    print("Likes: " + str(dubiousItem.likes))
                 except:
                     print("SubsPerView Unavailable")
-                print("Likes: " + str(n_item["likes"])+"\n")
+                #print("Likes: " + str(n_item["likes"])+"\n")
 
                 tryAgain = True
                 while tryAgain:
                     try:
                         rating = input("No rating?")
                         print("\n")
-                        if (int(rating) < rating_limit) and (rating != "f") and (rating != "n"): #f = finish; n = next
-                            rating = int(rating)
+                        if (rating != "f") and (rating != "n"): #f = finish; n = next
+                            tryAgain = False
+                            if ((int(rating) < rating_limit)):
+                                rating = int(rating)
+                            else:
+                                tryAgain= True
                         else:
+                            tryAgain = False
                             if rating == "f":
                                 finish = True
-                            else:
+                            elif rating == "n":
                                 next = True
-                        if (int(rating) < rating_limit) and rating is not "f" and rating is not "n" :
-                            tryAgain = False
+                            else:
+                                tryAgain = True
                     except:
                         tryAgain = True
 
                 if finish:
                     break
                 if not next:
-                    new_db["rating"] = rating
+                    new_db["list"][new_db["list"].index(n_item)]["rating"] = rating
+                    new_db["list"][new_db["list"].index(n_item)]["revised"] = 1
+                    n_item["rating"] = rating
+                    n_item["revised"] = 1
+                    revised_db["list"].append(n_item)
                 else:
                     new_db["list"].pop(new_db["list"].index(n_item))
+            else:
+                revised_db["list"].append(n_item)
         else:
             found=False
-
-    writeFile(os.getcwd()+"\\adjusted_database.json", new_db)
+    writeFile(os.getcwd() + "\\adjusted_database.json", revised_db)
+    #writeFile(os.getcwd()+"\\adjusted_database.json", new_db)
 
 def databaseAdding(old_db, new_db):
     found = False
