@@ -1,22 +1,104 @@
 # API client library
 import sys
+import os
+import googleapiclient.discovery
+import numpy
+import numpy as np
+import sklearn
+from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.model_selection import KFold
 
 from Classification.BERT import bert
-import nltk
-from nltk.stem import *
-from nltk.corpus import stopwords
-import googleapiclient.discovery
-
-from Classification.BERT.bert import bertPreprocessing, fineTuningBert
+from Classification.BERT.bert import fineTuningBert
 from Classification.Boosting.xgboost import XGBoost
 from Classification.Clustering.k_means_clustering import kmeans_test, elbowmethod, elbowmethod_2
-from Classification.RandomForest.randomForest import classifyWithForest
+from Classification.DecisionTree.TreeClass import VideoInfo
+from Classification.Model.FinalModel import Model
+from Classification.RandomForest.randomForest import classifyWithForest, Ten_foldForest
+from Classification.SentimentAnalysis.Vader import sentimentAnalysis
 from DataRetrieval.Fix_database import dabasefix, databaseAdding, noRepeats, ReviseAllRatingsFromClass, \
-    removeTheStrings
+    removeTheStrings, ratingsFromAll
 from Encoding.encoding_test import bagOfWords, tf_df
-from Tools.files import writeFile, readFile
-import os
+from Tools.Preprocessing import textCleanup, textCleanupForBert, databaseCleanup, databaseBERTCleanup, \
+    arrayBERTPreprocessing
+from Tools.files import writeFile, readFile, readCSV, readCSVKaggle
 
+
+def convertToFormat(db_name,rating):
+    x,y= readCSVKaggle(db_name,rating)
+    for i in range(len(x)):
+        x[i]["comments"]=getVideoComments(x[i]["title"], x[i]["id"])
+    db = {"x":x,"y":y}
+    return db
+
+def getVideoComments(name,id):
+    # API information
+    api_service_name = "youtube"
+    api_version = "v3"
+    # API key
+    DEVELOPER_KEY = "AIzaSyAJ_jIg4eJM8hdWV9-6HXtB-60DoKzn4qc"
+    # API client
+    youtube = googleapiclient.discovery.build(
+        api_service_name, api_version, developerKey=DEVELOPER_KEY)
+    comments = []
+    try:
+        request = youtube.commentThreads().list(
+            part="snippet",
+            maxResults=5,
+            videoId=id
+        )
+        response = request.execute()
+        for comment in response['items']:
+            comments.append({"text": comment['snippet']['topLevelComment']['snippet']['textOriginal'],
+                             "rating": 0})
+    except Exception as e:
+        print(e)
+        print("problem with Video " + name + " / ID: " + id)
+    return comments
+
+def getChannelComments(name, id, database):
+    # API information
+    api_service_name = "youtube"
+    api_version = "v3"
+    # API key
+    DEVELOPER_KEY = "AIzaSyAJ_jIg4eJM8hdWV9-6HXtB-60DoKzn4qc"
+    # API client
+    youtube = googleapiclient.discovery.build(
+        api_service_name, api_version, developerKey=DEVELOPER_KEY)
+
+    # TODO: Diferenciar entre username e id (mirar guiones y tal)
+    request = youtube.channels().list(
+        part="snippet,contentDetails,statistics",
+        id=id,
+    )
+    # Query execution
+    responseChannel = request.execute()
+    # Now with the response, we get the video list
+    try:
+        request = youtube.playlistItems().list(
+            part="snippet",
+            maxResults=50,
+            playlistId=responseChannel['items'][0]['contentDetails']['relatedPlaylists']['uploads']
+        )
+    except:
+        print("problem with tuple " + name + "/" + id)
+        return database
+
+    response = request.execute()
+    # Procesar el resultado y guardarlo en database
+    index = 0
+    for item in response['items']:
+        for example in database["list"]:
+            if item['snippet']['title'] == example["title"]:
+                comments = getVideoComments(name=item['snippet']['title'],id=item['snippet']['resourceId']['videoId'])
+                if len(comments)==0:
+                    break
+                else:
+                    database["list"][database["list"].index(example)]["comments"] = comments
+                    database["list"][database["list"].index(example)]["videoId"] = item['snippet']['resourceId']['videoId']
+        index += 1
+
+    return database
 
 def getVideos(name, id, database):
     # API information
@@ -89,6 +171,18 @@ def getVideos(name, id, database):
 
     return database
 
+def commentsLoop():
+    channels = readFile(os.getcwd() + "\channels.json")
+    database = readFile(os.getcwd() + "/adjusted_database.json")
+
+    for i in channels["channels"]:
+        name = i["name"]
+        id = i["id"]
+        print(name + "\n")
+        database = getChannelComments(name, id, database)
+
+    writeFile(os.getcwd() + "/adjusted_database.json", database)
+    print("I hem acabat!")
 
 def channelLoop():
     """
@@ -120,109 +214,8 @@ def channelLoop():
 
     print("I hem acabat!")
 
-
-def textCleanup(text):
-    stop_words = stopwords.words('english')
-    lemmatizer = WordNetLemmatizer()
-    # Tokenizamos
-    words = nltk.word_tokenize(text)
-    outWords = []
-    # Bucle para quitar signos de puntuación y stop words
-    i = 0
-    for word in words:
-        if word.isalnum():
-            if word not in stop_words:
-                # Lemmatization de verbos
-                outWords.insert(i, lemmatizer.lemmatize(word, pos="v"))
-                i += 1
-
-    return outWords
-
-
-def textCleanupForBert(text):
-    stop_words = stopwords.words('english')
-    outWords = []
-    outArray = ""
-    i = 0
-    words = text.split(" ")
-    for word in words:
-        if word.isalnum():
-            if word not in stop_words:
-                # Lemmatization de verbos
-                outWords.insert(i, word)
-                outArray += word + " "
-                i += 1
-    outArray = outArray[:-1]
-    return outArray
-
-
-def databaseBERTCleanup(database):
-    database = readFile(database)
-    i = 0
-    for item in database["list"]:
-        # Limpiamos los strings
-        title = textCleanupForBert(item["title"])
-        desc = textCleanupForBert(item["description"])
-        # reescribimos en la nueva DB
-        database["list"][i]["title"] = title
-        database["list"][i]["description"] = desc
-        i += 1
-    bertPreprocessing(database)
-
-
-def databaseCleanup():
-    # file = open("database.json")
-    # database = json.load(file)
-    database = readFile(os.getcwd() + "\database.json")
-    i = 0
-    for item in database["list"]:
-        # Limpiamos los strings
-        title = textCleanup(item["title"])
-        desc = textCleanup(item["description"])
-        # reescribimos en la nueva DB
-        database["list"][i]["title"] = title
-        database["list"][i]["description"] = desc
-        i += 1
-    # Miramos de poner todas las entrada de igual longitud
-    # Buscamos la longitud máxima
-    maxTitle = 0
-    maxDesc = 0
-    for item in database["list"]:
-        if len(item["title"]) > maxTitle:
-            maxTitle = len(item["title"])
-        if len(item["description"]) > maxDesc:
-            maxDesc = len(item["description"])
-    # Reajustamos según longitud máxima
-    j = 0
-    for item in database["list"]:
-        if len(item["title"]) < maxTitle:
-            for i in range(len(item["title"]), maxTitle):
-                item["title"].insert(i, "0")
-        if len(item["description"]) < maxDesc:
-            for i in range(len(item["description"]), maxDesc):
-                item["description"].insert(i, "0")
-        database["list"][j] = item
-        j += 1
-
-    # Escribim en un arxiu nou
-    # with open("clean_database.json", "w") as file:
-    #    json.dump(database,file)
-    writeFile(os.getcwd() + "\clean_database.json", database)
-
-
 def databaseEncoding(db_option):
     bert.bertEncoding(db_option)
-
-
-def ratingsFromAll():
-    e_database = readFile(os.getcwd() + "\encoded_database.json")
-    database = readFile(os.getcwd() + "\database.json")
-    i = 0
-    for item in e_database["list"]:
-        database["list"][i]["rating"] = item["rating"]
-        i += 1
-    writeFile(os.getcwd() + "\database.json", database)
-
 
 if __name__ == "__main__":
     option = sys.argv[1]
@@ -231,7 +224,10 @@ if __name__ == "__main__":
     option3 = sys.argv[3]
     # goToFunc(option)
     if option == '1':
-        channelLoop()
+        if option2 == '1':
+            channelLoop()
+        else:
+            commentsLoop()
     elif option == '2':
         if option2 == '1':
             databaseCleanup()
@@ -271,7 +267,9 @@ if __name__ == "__main__":
             ratingsFromAll()
             """
             #Temporalmente, versión de databaseFix
-            dabasefix(readFile(os.getcwd() + "\\adjusted_database.json"), readFile(os.getcwd() + "\database.json"),int(option3), True)
+            a_db = readFile(os.getcwd() + "\\adjusted_database.json")
+            db = readFile(os.getcwd() + "\database.json")
+            dabasefix(a_db, db,int(option3), True)
             #contingencyPlan("logFile.txt",readFile(os.getcwd() + "\\database.json"))
             pass
         elif option2 == '2':
@@ -300,7 +298,90 @@ if __name__ == "__main__":
         from Classification.DecisionTree.TreeLogic import getBestFeatures, findAverage
 
         getBestFeatures()
-        findAverage(int(option3),False)
+        #findAverage(int(option3),False)
     elif option == '9':
+        #databaseBERTCleanup(os.getcwd() + "\\adjusted_database.json")
+        #databaseEncoding(option2)
         classifyWithForest()
         XGBoost()
+    elif option == '10':
+        Ten_foldForest()
+    elif option == '11':
+        sentimentAnalysis(readFile(os.getcwd() + "\\adjusted_database.json"))
+    elif option == '12':
+        model = Model(readFile(os.getcwd() + "\\adjusted_database.json"), [[],[]])
+        model.fit()
+        model.test()
+    elif option == '13':
+        database = readFile(os.getcwd() + "\\adjusted_database.json")
+        indices = range(len(database["list"]))
+        scores = []
+        kfold = KFold(n_splits=10, shuffle=True, random_state=1)
+        for train,test in kfold.split(database["list"]):
+            model = Model(database, [train,test])
+            model.fit()
+            (preds,y) = model.test()
+            score_f1 = sklearn.metrics.f1_score(y, preds)
+            score_acc = sklearn.metrics.accuracy_score(y, preds)
+            score_recall = sklearn.metrics.recall_score(y, preds)
+            scores.append([score_f1, score_acc, score_recall])
+        scores = numpy.array(scores)
+        print('Cross Validation f1 scores: %s' % scores[:, 0])
+        print('Cross Validation f1: %.3f +/- %.3f' % (np.mean(scores[:, 0]), np.std(scores[:, 0])))
+        print('Cross Validation accuracy scores: %s' % scores[:, 1])
+        print('Cross Validation accuracy: %.3f +/- %.3f' % (np.mean(scores[:, 1]), np.std(scores[:, 1])))
+        print('Cross Validation score_recall scores: %s' % scores[:, 2])
+        print('Cross Validation score_recall: %.3f +/- %.3f' % (np.mean(scores[:, 2]), np.std(scores[:, 2])))
+
+    elif option == '14':
+        db_name = (os.getcwd()+"/encoded_other.json") if option2=="2" else (os.getcwd()+"/yt_other/encoded_5sc_db.json")
+        model = Model(readFile(os.getcwd() + "\\adjusted_database.json"), [[], []])
+        if not os.path.exists(db_name):
+            if option2=="1":
+                x,y=readCSV(os.getcwd()+"/clickbait_data.csv")
+                db = arrayBERTPreprocessing(x, y)
+                writeFile(os.getcwd() + "/encoded_other.json", db)
+            else:
+                db_pre=readFile(os.getcwd()+"/yt_other/5sc_db.json")
+                x=db_pre["x"]
+                y=db_pre["y"]
+                db = arrayBERTPreprocessing(x, y)
+                writeFile(os.getcwd() + "/yt_other/encoded_5sc_db.json", db)
+            #databaseBERTCleanup(os.getcwd() + "\database.json")
+        else:
+            db=readFile(db_name)
+        model.fit()
+        if option2 == "1":
+            preds = model.predictList(db["x"])
+        else:
+            preds = []
+            for item in db["x"]:
+                preds.append(model.predict(item))
+        print(classification_report(preds, db["y"]))
+        cf_matrix = confusion_matrix(preds, db["y"])
+        print(cf_matrix)
+        # We plot the matrix
+        import seaborn as sns
+        import matplotlib.pyplot as plt
+        ax = sns.heatmap(cf_matrix, annot=True, cmap='Blues')
+        ax.set_title('Confusion Matrix\n\n');
+        ax.set_xlabel('\nPredicted Values')
+        ax.set_ylabel('Actual Values ');
+        ax.xaxis.set_ticklabels(['0', '1'])
+        ax.yaxis.set_ticklabels(['0', '1'])
+        # Display the visualization of the Confusion Matrix.
+        plt.show()
+        
+        #TODO: Delete this
+        othersDB = readFile(os.getcwd() + "/yt_other/other_db.json")
+        for i in range(len(preds)):
+            if preds[i] == 1 and db["y"][i] == 0:
+                print(othersDB["x"][i]["title"])
+    elif option == "15":
+        
+        clickbait= convertToFormat(os.getcwd()+"/yt_other/clickbait.csv",0)
+        notClickbait=convertToFormat(os.getcwd()+"/yt_other/notClickbait.csv",1)
+        for i in range(len(notClickbait["x"])):
+            clickbait["x"].append(notClickbait["x"][i])
+            clickbait["y"].append(notClickbait["y"][i])
+        writeFile(os.getcwd()+"/yt_other/other_db.json",clickbait)
