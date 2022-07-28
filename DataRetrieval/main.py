@@ -6,14 +6,16 @@ import numpy
 import numpy as np
 import sklearn
 from sklearn.metrics import classification_report, confusion_matrix
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, GridSearchCV
 
 from Classification.BERT import bert
 from Classification.BERT.bert import fineTuningBert
 from Classification.Boosting.xgboost import XGBoost
 from Classification.Clustering.k_means_clustering import kmeans_test, elbowmethod, elbowmethod_2
 from Classification.DecisionTree.TreeClass import VideoInfo
+from Classification.LogisticRegression.logisticRegression import logisticRegression
 from Classification.Model.FinalModel import Model
+from Classification.NaiveBayes.NaiveBayes import NaiveBayes
 from Classification.RandomForest.randomForest import classifyWithForest, Ten_foldForest
 from Classification.SentimentAnalysis.Vader import sentimentAnalysis
 from DataRetrieval.Fix_database import dabasefix, databaseAdding, noRepeats, ReviseAllRatingsFromClass, \
@@ -302,6 +304,7 @@ if __name__ == "__main__":
     elif option == '9':
         #databaseBERTCleanup(os.getcwd() + "\\adjusted_database.json")
         #databaseEncoding(option2)
+        NaiveBayes()
         classifyWithForest()
         XGBoost()
     elif option == '10':
@@ -311,7 +314,8 @@ if __name__ == "__main__":
     elif option == '12':
         model = Model(readFile(os.getcwd() + "\\adjusted_database.json"), [[],[]])
         model.fit()
-        model.test()
+        y,y_true,time= model.test()
+        print(time)
     elif option == '13':
         database = readFile(os.getcwd() + "\\adjusted_database.json")
         indices = range(len(database["list"]))
@@ -334,7 +338,7 @@ if __name__ == "__main__":
         print('Cross Validation score_recall: %.3f +/- %.3f' % (np.mean(scores[:, 2]), np.std(scores[:, 2])))
 
     elif option == '14':
-        db_name = (os.getcwd()+"/encoded_other.json") if option2=="2" else (os.getcwd()+"/yt_other/encoded_5sc_db.json")
+        db_name = (os.getcwd()+"/yt_other/encoded_5sc_db.json") if option2=="2" else (os.getcwd()+"/yt_other/encoded_other.json")
         model = Model(readFile(os.getcwd() + "\\adjusted_database.json"), [[], []])
         if not os.path.exists(db_name):
             if option2=="1":
@@ -373,10 +377,12 @@ if __name__ == "__main__":
         plt.show()
         
         #TODO: Delete this
+        """
         othersDB = readFile(os.getcwd() + "/yt_other/other_db.json")
         for i in range(len(preds)):
             if preds[i] == 1 and db["y"][i] == 0:
                 print(othersDB["x"][i]["title"])
+        """
     elif option == "15":
         
         clickbait= convertToFormat(os.getcwd()+"/yt_other/clickbait.csv",0)
@@ -385,3 +391,34 @@ if __name__ == "__main__":
             clickbait["x"].append(notClickbait["x"][i])
             clickbait["y"].append(notClickbait["y"][i])
         writeFile(os.getcwd()+"/yt_other/other_db.json",clickbait)
+    elif option =="gridsearch":
+        from sklearn.naive_bayes import GaussianNB
+        model = Model(readFile(os.getcwd() + "\\adjusted_database.json"), [[], []])
+        gscv = GridSearchCV(model, param_grid= {"umbral":[np.linspace(0,1,11)],
+                                                "union":[sklearn.neural_network.MLPClassifier(solver='sgd',
+                                                                       alpha=1e-3,
+                                                                       activation='relu',
+                                                                       hidden_layer_sizes=(120,60,30),
+                                                                       random_state=1),
+                                                        GaussianNB()],
+                                                "database":[readFile(os.getcwd() + "\\adjusted_database.json")],
+                                                "indexes":   [[[], []]]},
+                            scoring=dict)
+        gscv.fit([],[])
+
+        print(sorted(gscv.cv_results_.keys()))
+    elif option == "logres":
+        classifyWithForest()
+    elif option == "validarUmbral":
+        times = []
+        for i in np.arange(0,1, 0.1):
+            model = Model(readFile(os.getcwd() + "\\adjusted_database.json"), [[], []],
+                          umbral=i)
+            model.fit()
+            y,y_def,time = model.test()
+            times.append(time)
+        import matplotlib.pyplot as plt
+        import numpy as np
+        ypoints = np.array(times)
+        plt.plot(ypoints, linestyle='solid')
+        plt.show()
