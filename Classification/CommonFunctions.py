@@ -1,5 +1,14 @@
 from sklearn.metrics import confusion_matrix, classification_report
 
+
+def getIndices(database, split):
+    out = []
+    for i in range(len(database["list"])):
+        for j in range(len(split)):
+            if database["list"][i]["title"] == split[j][12:]:
+                out.append(i)
+    return out
+
 def trainingAndTest(classifier, train_x,train_y,test_x,test_y):
     import time
     milliseconds = time.time_ns()
