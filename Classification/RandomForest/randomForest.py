@@ -48,13 +48,6 @@ def Ten_foldForest():
     print('Cross Validation score_recall scores: %s' % scores[:,2])
     print('Cross Validation score_recall: %.3f +/- %.3f' % (np.mean(scores[:,2]), np.std(scores[:,2])))
 
-def getIndices(database, split):
-    out = []
-    for i in range(len(database["list"])):
-        for j in range(len(split)):
-            if database["list"][i]["title"] == split[j][12:]:
-                out.append(i)
-    return out
 
 def classifyWithForest():
     data,titles = constructData(os.getcwd() + "/adjusted_database.json", onlytitles=True, merge=False)
@@ -66,10 +59,11 @@ def classifyWithForest():
                                          classes = np.unique(train_y),
                                          y =  train_y)
     print("Class Weights:", class_weights)
-    classifier  = RandomForestClassifier(n_estimators=100,
-                                         criterion="entropy",
-                                         class_weight={0:class_weights[0],
-                                                       1:class_weights[1]})
+    classifier  = RandomForestClassifier(n_estimators=70,
+                                            criterion="gini",
+                                            class_weight={0: class_weights[0],
+                                                          1: class_weights[1]},
+                                            max_features="sqrt")
 
     classifier = trainingAndTest(classifier,train_x,train_y,test_x,test_y)
     #CheckTheProbability(classifier, train_x, train_y, test_x, test_y,titles, test_indices)
