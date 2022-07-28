@@ -13,8 +13,13 @@ from Tools.Preprocessing import textCleanupForVader
 
 
 class Model:
+    umbral = 0.8
+    def __init__(self, database,indexes,**kwargs):
 
-    def __init__(self, database,indexes):
+        self.umbral=kwargs.get('umbral', None)
+        if self.umbral == None:
+            self.umbral=0.8
+
         indices = range(len(database["list"]))
         train_indices, test_indices = train_test_split(indices,  random_state=420, test_size=0.3)
         if len(indexes[0]) == 0:
@@ -35,35 +40,43 @@ class Model:
                                              y=self.train_data_Titles["y"])
 
         # Title
-        self.titleClassifier = RandomForestClassifier(n_estimators=100,
-                                            criterion="entropy",
+
+        self.titleClassifier = RandomForestClassifier(n_estimators=70,
+                                            criterion="gini",
                                             class_weight={0: class_weights[0],
-                                                          1: class_weights[1]})
+                                                          1: class_weights[1]},
+                                            max_features="sqrt")
         # Feats
         self.featuresClassifier = xgb.XGBClassifier(objective='binary:hinge',
-                                   n_estimators=10,
-                                  seed=420)
+                                                    n_estimators=90,
+                                                    seed=420,
+                                                    tree_method="gpu_hist",
+                                                    predictor="gpu_predictor",
+                                                    booster="gbtree",
+                                                    )
         # Vader
         self.sentimentAnalyzer = SentimentIntensityAnalyzer()
 
         #Final Layer
         #self.unionLayer = Union_ARCH()
-        #TODO: PONER UN MULTI-LAYER PERCEPTRON??
-        self.unionLayer = sklearn.neural_network.MLPClassifier(solver='sgd',
+        self.unionLayer = kwargs.get('union', None)
+        if  self.unionLayer==None:
+            self.unionLayer = sklearn.neural_network.MLPClassifier(solver='sgd',
                                                                alpha=1e-3,
-                                                               activation='relu',
-                                                               hidden_layer_sizes=(120,60,30),
+                                                               activation='identity',
+                                                               hidden_layer_sizes=(20,40,20),
                                                                random_state=1)
+
 
     def fit(self):
         self.titleClassifier= self.titleClassifier.fit(self.train_data_Titles["x"],self.train_data_Titles["y"])
         self.featuresClassifier= self.featuresClassifier.fit(self.train_data_Features["x"], self.train_data_Features["y"])
 
         #self.titleClassifier.fit(self.train_data_Titles["x"], self.train_data_Titles["y"])
-        #FIXME:Train union layer
         data = []
         for i in range(len(self.train_data_Titles["x"])):
            data.append(self.getArrayForUnion(i))
+
         self.unionLayer.fit(data,self.train_data_Titles["y"])
         #Save Settings
         print("Training done")
@@ -96,7 +109,7 @@ class Model:
 
         y       =self.titleClassifier.predict([object["title"]])
         y_proba =self.titleClassifier.predict_proba([object["title"]])
-        if y_proba[0][y] <= 0.8:
+        if y_proba[0][y] <= self.umbral:
             #Features predict
             y_feat= self.featuresClassifier.predict([object["features"]])
             y_feat_proba= self.featuresClassifier.predict_proba([object["features"]])
@@ -117,13 +130,14 @@ class Model:
 
     def test(self):
         y=[]
+        import time
+        t0 = time.time_ns()
         for i in range(len(self.test_data_Titles["x"])):
             pred = self.predict({"title":self.test_data_Titles["x"][i],
                           "features":self.test_data_Features["x"][i],
                           "comments":self.test_comments[i]})
             y.append(pred[0])
-
-
+        t1 = time.time_ns()
         from sklearn.metrics import classification_report
         from sklearn.metrics import confusion_matrix
         print(classification_report(self.test_data_Titles["y"], y))
@@ -141,4 +155,13 @@ class Model:
         # Display the visualization of the Confusion Matrix.
         plt.show()
 
-        return y,self.test_data_Titles["y"]
+        return y,self.test_data_Titles["y"], (t1-t0)
+
+    def get_params(self,deep=True):
+        from Tools.files import readFile
+        return {"umbral" : self.umbral,"uinon" : self.unionLayer, "database": readFile(os.getcwd() + "\\adjusted_database.json"),
+                "indexes": [[], []]}
+
+    def set_params(self, **parameters):
+        for parameter, value in parameters.items():
+            setattr(self, parameter, value)
