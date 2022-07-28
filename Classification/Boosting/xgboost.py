@@ -13,6 +13,10 @@ def  XGBoost():
                                                                         random_state=420,
                                                                         test_size=0.3)
     classifier = xgb.XGBClassifier(objective='binary:hinge',
-                                   n_estimators=10,
-                                  seed=420)
+                                                n_estimators=90,
+                                                seed=420,
+                                                tree_method="gpu_hist",
+                                                predictor="gpu_predictor",
+                                                booster="gbtree",
+                                                )
     trainingAndTest(classifier,train_x,train_y,test_x,test_y)
