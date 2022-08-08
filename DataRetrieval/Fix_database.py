@@ -39,7 +39,7 @@ def dabasefix(revised_db, new_db, rating_limit, checkDubiousOnes):
 
             #Si no se da el caso pues no pasa nada porque no se borra el ya existente
             if (checkDubiousOnes is True and n_item["rating"] is 1 and isDubious(dubiousItem)) \
-                    or checkDubiousOnes is False:
+                    or (checkDubiousOnes is False):
                 print(n_item["title"])
                 print("rating: "+str(n_item["rating"]))
                 try:
@@ -82,7 +82,8 @@ def dabasefix(revised_db, new_db, rating_limit, checkDubiousOnes):
                     n_item["revised"] = 1
                     revised_db["list"].append(n_item)
                 else:
-                    new_db["list"].pop(new_db["list"].index(n_item))
+                    #new_db["list"].pop(new_db["list"].index(n_item))
+                    print("Saltem el element")
             else:
                 revised_db["list"].append(n_item)
         else:
