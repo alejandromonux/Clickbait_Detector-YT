@@ -22,9 +22,9 @@ from DataRetrieval.Fix_database import dabasefix, databaseAdding, noRepeats, Rev
     removeTheStrings, ratingsFromAll
 from Encoding.encoding_test import bagOfWords, tf_df
 from Tools.Preprocessing import textCleanup, textCleanupForBert, databaseCleanup, databaseBERTCleanup, \
-    arrayBERTPreprocessing
+    arrayBERTPreprocessing, textCleanupForTFIDF, undersamplingDB
 from Tools.files import writeFile, readFile, readCSV, readCSVKaggle
-
+from yt_api import *
 
 def convertToFormat(db_name,rating):
     x,y= readCSVKaggle(db_name,rating)
@@ -33,188 +33,6 @@ def convertToFormat(db_name,rating):
     db = {"x":x,"y":y}
     return db
 
-def getVideoComments(name,id):
-    # API information
-    api_service_name = "youtube"
-    api_version = "v3"
-    # API key
-    DEVELOPER_KEY = "AIzaSyAJ_jIg4eJM8hdWV9-6HXtB-60DoKzn4qc"
-    # API client
-    youtube = googleapiclient.discovery.build(
-        api_service_name, api_version, developerKey=DEVELOPER_KEY)
-    comments = []
-    try:
-        request = youtube.commentThreads().list(
-            part="snippet",
-            maxResults=5,
-            videoId=id
-        )
-        response = request.execute()
-        for comment in response['items']:
-            comments.append({"text": comment['snippet']['topLevelComment']['snippet']['textOriginal'],
-                             "rating": 0})
-    except Exception as e:
-        print(e)
-        print("problem with Video " + name + " / ID: " + id)
-    return comments
-
-def getChannelComments(name, id, database):
-    # API information
-    api_service_name = "youtube"
-    api_version = "v3"
-    # API key
-    DEVELOPER_KEY = "AIzaSyAJ_jIg4eJM8hdWV9-6HXtB-60DoKzn4qc"
-    # API client
-    youtube = googleapiclient.discovery.build(
-        api_service_name, api_version, developerKey=DEVELOPER_KEY)
-
-    # TODO: Diferenciar entre username e id (mirar guiones y tal)
-    request = youtube.channels().list(
-        part="snippet,contentDetails,statistics",
-        id=id,
-    )
-    # Query execution
-    responseChannel = request.execute()
-    # Now with the response, we get the video list
-    try:
-        request = youtube.playlistItems().list(
-            part="snippet",
-            maxResults=50,
-            playlistId=responseChannel['items'][0]['contentDetails']['relatedPlaylists']['uploads']
-        )
-    except:
-        print("problem with tuple " + name + "/" + id)
-        return database
-
-    response = request.execute()
-    # Procesar el resultado y guardarlo en database
-    index = 0
-    for item in response['items']:
-        for example in database["list"]:
-            if item['snippet']['title'] == example["title"]:
-                comments = getVideoComments(name=item['snippet']['title'],id=item['snippet']['resourceId']['videoId'])
-                if len(comments)==0:
-                    break
-                else:
-                    database["list"][database["list"].index(example)]["comments"] = comments
-                    database["list"][database["list"].index(example)]["videoId"] = item['snippet']['resourceId']['videoId']
-        index += 1
-
-    return database
-
-def getVideos(name, id, database):
-    # API information
-    api_service_name = "youtube"
-    api_version = "v3"
-    # API key
-    DEVELOPER_KEY = "AIzaSyAJ_jIg4eJM8hdWV9-6HXtB-60DoKzn4qc"
-    # API client
-    youtube = googleapiclient.discovery.build(
-        api_service_name, api_version, developerKey=DEVELOPER_KEY)
-
-    # TODO: Diferenciar entre username e id (mirar guiones y tal)
-    request = youtube.channels().list(
-        part="snippet,contentDetails,statistics",
-        id=id,
-    )
-    # Query execution
-    responseChannel = request.execute()
-    # Now with the response, we get the video list
-    try:
-        request = youtube.playlistItems().list(
-            part="snippet",
-            maxResults=25,
-            playlistId=responseChannel['items'][0]['contentDetails']['relatedPlaylists']['uploads']
-        )
-    except:
-        print("problem with tuple " + name + "/" + id)
-        return database
-
-    response = request.execute()
-    # Procesar el resultado y guardarlo en database
-    index = 0
-    for item in response['items']:
-        try:
-            request = youtube.videos().list(
-                part="snippet,contentDetails,statistics",
-                id=item['snippet']['resourceId']['videoId']
-            )
-        except:
-            print("problem with Video " + item['snippet']['title'] + "/ID: " + item['snippet']['resourceId'])
-            return database
-        infoVideo = request.execute()
-        title = item['snippet']['title']
-        description = item['snippet']['description']
-        try:
-            database['list'].insert(
-                index,
-                {
-                    "author": responseChannel["items"][0]["snippet"]["title"],
-                    "subscribers": responseChannel["items"][0]["statistics"]["subscriberCount"],
-                    "title": title,
-                    "description": description,
-                    "category": infoVideo['items'][0]['snippet']['categoryId'],
-                    "publishDate": infoVideo['items'][0]['snippet']['publishedAt'],
-                    "views": infoVideo['items'][0]['statistics']['viewCount'],
-                    "likes": infoVideo['items'][0]['statistics']['likeCount'],
-                    "fav_count": infoVideo['items'][0]['statistics']['favoriteCount'],
-                    "num_comments": infoVideo['items'][0]['statistics']['commentCount'],
-                    "rating": "0"
-                }
-            )
-        except Exception as e:
-            print(e)
-            print("problem with Video " + item['snippet']['title'] + " from " + responseChannel["items"][0]["snippet"][
-                "title"] + " -No Statistics")
-        # database["list"][index]["title"] = title
-        # database["list"][index]["description"] = description
-        # database["list"][index]["rating"] = 0
-        index += 1
-
-    return database
-
-def commentsLoop():
-    channels = readFile(os.getcwd() + "\channels.json")
-    database = readFile(os.getcwd() + "/adjusted_database.json")
-
-    for i in channels["channels"]:
-        name = i["name"]
-        id = i["id"]
-        print(name + "\n")
-        database = getChannelComments(name, id, database)
-
-    writeFile(os.getcwd() + "/adjusted_database.json", database)
-    print("I hem acabat!")
-
-def channelLoop():
-    """
-    file = open("channels.json")
-    channels = json.load(file)
-    """
-    channels = readFile(os.getcwd() + "\channels.json")
-    """
-    database = {
-        "list":[
-            {"title" : "a",
-             "description": "a",
-             "rating" : "1"}
-        ]
-    }
-    """
-    database = {}
-    database["list"] = []
-
-    for i in channels["channels"]:
-        name = i["name"]
-        id = i["id"]
-        print(name + "\n")
-        database = getVideos(name, id, database)
-
-    # with open("database.json", "w") as file:
-    #    json.dump(database,file)
-    writeFile(os.getcwd() + "\database.json", database)
-
-    print("I hem acabat!")
 
 def databaseEncoding(db_option):
     bert.bertEncoding(db_option)
@@ -271,12 +89,12 @@ if __name__ == "__main__":
             #Temporalmente, versión de databaseFix
             a_db = readFile(os.getcwd() + "\\adjusted_database.json")
             db = readFile(os.getcwd() + "\database.json")
-            dabasefix(a_db, db,int(option3), True)
-            #contingencyPlan("logFile.txt",readFile(os.getcwd() + "\\database.json"))
+            dabasefix(a_db, db,int(option3), False)
+            #contingencyPlan("",readFile(os.getcwd() + "\\database.json"))
             pass
         elif option2 == '2':
             # VERSIÓN BUENA
-            # channelLoop()
+            channelLoop()
             databaseBERTCleanup(os.getcwd() + "\database.json")
             databaseEncoding(option2)
             kmeans_test(int(option3))
@@ -302,8 +120,8 @@ if __name__ == "__main__":
         getBestFeatures()
         #findAverage(int(option3),False)
     elif option == '9':
-        #databaseBERTCleanup(os.getcwd() + "\\adjusted_database.json")
-        #databaseEncoding(option2)
+        databaseBERTCleanup(os.getcwd() + "\\adjusted_database.json")
+        databaseEncoding(option2)
         NaiveBayes()
         classifyWithForest()
         XGBoost()
@@ -312,19 +130,22 @@ if __name__ == "__main__":
     elif option == '11':
         sentimentAnalysis(readFile(os.getcwd() + "\\adjusted_database.json"))
     elif option == '12':
-        model = Model(readFile(os.getcwd() + "\\adjusted_database.json"), [[],[]])
+        db = readFile(os.getcwd() + "\\adjusted_database.json")
+        db_us= undersamplingDB(database=db,limit=1500,classes=2)
+        model = Model(db_us, [[],[]])
         model.fit()
         y,y_true,time= model.test()
         print(time)
     elif option == '13':
         database = readFile(os.getcwd() + "\\adjusted_database.json")
+        db_us= undersamplingDB(database=database,limit=1500,classes=2)
         indices = range(len(database["list"]))
         scores = []
         kfold = KFold(n_splits=10, shuffle=True, random_state=1)
         for train,test in kfold.split(database["list"]):
             model = Model(database, [train,test])
             model.fit()
-            (preds,y) = model.test()
+            preds,y,time= model.test()
             score_f1 = sklearn.metrics.f1_score(y, preds)
             score_acc = sklearn.metrics.accuracy_score(y, preds)
             score_recall = sklearn.metrics.recall_score(y, preds)
@@ -338,7 +159,7 @@ if __name__ == "__main__":
         print('Cross Validation score_recall: %.3f +/- %.3f' % (np.mean(scores[:, 2]), np.std(scores[:, 2])))
 
     elif option == '14':
-        db_name = (os.getcwd()+"/yt_other/encoded_5sc_db.json") if option2=="2" else (os.getcwd()+"/yt_other/encoded_other.json")
+        db_name = (os.getcwd()+"/yt_other/encoded_5sc_db.json") if option2=="2" else (os.getcwd()+"/yt_other/encoded_other_dbf.json")
         model = Model(readFile(os.getcwd() + "\\adjusted_database.json"), [[], []])
         if not os.path.exists(db_name):
             if option2=="1":
@@ -422,3 +243,16 @@ if __name__ == "__main__":
         ypoints = np.array(times)
         plt.plot(ypoints, linestyle='solid')
         plt.show()
+    elif option == "DEBUGWEB":
+        dataForTheWeb("3D_I1M0dfFeck")
+    elif option == "TFIDF":
+        db = readFile(os.getcwd()+"\\adjusted_database.json")
+        db_clean = db
+        for i in range(len(db["list"])):
+            db_clean["list"][i]["title"] = textCleanupForBert(db["list"][i]["title"])
+        titles = []
+        for i in db_clean["list"]: titles.append(i["title"])
+        from Encoding.tfidf import *
+        titles = tfidf_encoding(titles)
+        for i in range(len(titles)): db["list"][i]["title"]=titles[i].tolist()
+        writeFile(os.getcwd()+"\\encoded_database.json",db_clean)
