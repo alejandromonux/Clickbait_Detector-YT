@@ -1,4 +1,5 @@
 import os
+import random
 
 import nltk
 from nltk.stem import WordNetLemmatizer
@@ -6,6 +7,17 @@ from nltk.corpus import stopwords
 
 from Classification.BERT.bert import bertPreprocessing, bertPreprocessingArray, bertencodingsArray
 from Tools.files import writeFile, readFile
+
+
+def undersamplingDB(database, limit, classes):
+    database_out = {"list":[]}
+    count = [0]*classes
+    random.shuffle(database["list"])
+    for i in range(len(database["list"])):
+        if count[database["list"][i]["rating"]] < limit:
+            database_out["list"].append(database["list"][i])
+            count[database["list"][i]["rating"]]+=1
+    return database_out
 
 def arrayBERTPreprocessing(array,y):
     i = 0
@@ -16,10 +28,10 @@ def arrayBERTPreprocessing(array,y):
             element =array[i]["title"]
         else:
             element =array[i]
+        print(element)
         array_p.append( textCleanupForBert(element))
     processedArray = bertPreprocessingArray(array_p)
     return bertencodingsArray(processedArray,array,y)
-
 
 def databaseBERTCleanup(database):
     database = readFile(database)
@@ -34,7 +46,7 @@ def databaseBERTCleanup(database):
         i += 1
     bertPreprocessing(database)
 
-def databaseCleanup():
+def databaseCleanup(**kwargs):
     # file = open("database.json")
     # database = json.load(file)
     database = readFile(os.getcwd() + "\database.json")
@@ -73,7 +85,6 @@ def databaseCleanup():
     #    json.dump(database,file)
     writeFile(os.getcwd() + "\clean_database.json", database)
 
-
 def textCleanup(text):
     stop_words = stopwords.words('english')
 
@@ -93,7 +104,6 @@ def textCleanup(text):
 
     return outWords
 
-
 def textCleanupForBert(text):
     stop_words = stopwords.words('english')
     outWords = []
@@ -101,8 +111,8 @@ def textCleanupForBert(text):
     i = 0
     words = text.split(" ")
     for word in words:
-        if word.isalnum():
-            if word not in stop_words:
+        if word.isalnum() or (not word.isalnum() and ".." in word):
+            if word.lower() not in stop_words:
                 # Lemmatization de verbos
                 outWords.insert(i, word)
                 outArray += word + " "
@@ -138,3 +148,6 @@ def textCleanupForVader(text):
         return ""
 
     return outSentence
+
+def textCleanupForTFIDF(text):
+    pass
