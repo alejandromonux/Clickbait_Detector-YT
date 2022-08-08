@@ -1,4 +1,5 @@
 import os
+import random
 
 import numpy as np
 import sklearn.neural_network
@@ -15,58 +16,86 @@ from Tools.Preprocessing import textCleanupForVader
 class Model:
     umbral = 0.8
     def __init__(self, database,indexes,**kwargs):
-
+        willImport = kwargs.get('willImport', False)
+        flask_direction =kwargs.get('flask_direction', None)
         self.umbral=kwargs.get('umbral', None)
         if self.umbral == None:
             self.umbral=0.8
+        random.shuffle(database["list"])
+        if not willImport:
+            indices = range(len(database["list"]))
+            train_indices, test_indices = train_test_split(indices,  random_state=420, test_size=0.3)
+            if len(indexes[0]) == 0:
+                self.train_data_Titles,self.test_data_Titles,\
+                self.train_data_Features,self.test_data_Features,\
+                self.train_comments, self.test_comments = constructDataFromIndexes([train_indices,test_indices], onlytitles=True, merge=False,
+                                                                                   adjusted_database=flask_direction)
+            else:
+                self.train_data_Titles, self.test_data_Titles, \
+                self.train_data_Features, self.test_data_Features, \
+                self.train_comments, self.test_comments = constructDataFromIndexes(indexes,
+                                                                                   onlytitles=True, merge=False,
+                                                                                   adjusted_database=flask_direction)
 
-        indices = range(len(database["list"]))
-        train_indices, test_indices = train_test_split(indices,  random_state=420, test_size=0.3)
-        if len(indexes[0]) == 0:
-            self.train_data_Titles,self.test_data_Titles,\
-            self.train_data_Features,self.test_data_Features,\
-            self.train_comments, self.test_comments = constructDataFromIndexes([train_indices,test_indices], onlytitles=True, merge=False)
+            from numpy import ndarray
+            #self.train_data_Titles["y"] = ndarray.tolist(self.train_data_Titles["y"])
+            #self.train_data_Features["y"] = ndarray.tolist(self.train_data_Features["y"])
+            class_weights = compute_class_weight(class_weight='balanced',
+                                                 classes=np.unique(self.train_data_Titles["y"]),
+                                                 y=self.train_data_Titles["y"])
+
+            # Title
+
+            self.titleClassifier = RandomForestClassifier(n_estimators=70,
+                                                criterion="gini",
+                                                class_weight={0: class_weights[0],
+                                                              1: class_weights[1]},
+                                                max_features="sqrt")
+            # Feats
+            self.featuresClassifier = xgb.XGBClassifier(objective='binary:hinge',
+                                                        n_estimators=90,
+                                                        seed=420,
+                                                        tree_method="gpu_hist",
+                                                        predictor="gpu_predictor",
+                                                        booster="gbtree",
+                                                        )
+            # Vader
+            self.sentimentAnalyzer = SentimentIntensityAnalyzer()
+
+            #Final Layer
+            #self.unionLayer = Union_ARCH()
+            self.unionLayer = kwargs.get('union', None)
+            if  self.unionLayer==None:
+                self.unionLayer = sklearn.neural_network.MLPClassifier(solver='sgd',
+                                                                   alpha=1e-3,
+                                                                   activation='identity',
+                                                                   hidden_layer_sizes=(20,40,20),
+                                                                   random_state=1)
         else:
-            self.train_data_Titles, self.test_data_Titles, \
-            self.train_data_Features, self.test_data_Features, \
-            self.train_comments, self.test_comments = constructDataFromIndexes(indexes,
-                                                                               onlytitles=True, merge=False)
+            self.titleClassifier = RandomForestClassifier()
+            # Feats
+            self.featuresClassifier = xgb.XGBClassifier()
+            # Vader
+            self.sentimentAnalyzer = SentimentIntensityAnalyzer()
+            # Final Layer
+            self.unionLayer = sklearn.neural_network.MLPClassifier()
+    def saveModel(self):
+        import joblib
+        joblib.dump(self.titleClassifier,"RandomForest.json")
+        joblib.dump(self.featuresClassifier, "XGBoost.json")
+        #self.featuresClassifier.save_model("XGBoost.json")
+        joblib.dump(self.unionLayer,"UnionLayer.json")
 
-        from numpy import ndarray
-        #self.train_data_Titles["y"] = ndarray.tolist(self.train_data_Titles["y"])
-        #self.train_data_Features["y"] = ndarray.tolist(self.train_data_Features["y"])
-        class_weights = compute_class_weight(class_weight='balanced',
-                                             classes=np.unique(self.train_data_Titles["y"]),
-                                             y=self.train_data_Titles["y"])
-
-        # Title
-
-        self.titleClassifier = RandomForestClassifier(n_estimators=70,
-                                            criterion="gini",
-                                            class_weight={0: class_weights[0],
-                                                          1: class_weights[1]},
-                                            max_features="sqrt")
+    def loadModel(self,**kwargs):
+        routes= ["RandomForest.json","XGBoost.json","UnionLayer.json"]
+        prefix = kwargs.get('prefix', "")
+        for i in range(len(routes)): routes[i] = os.getcwd()+prefix+routes[i]
+        import joblib
+        self.titleClassifier = joblib.load(routes[0])
         # Feats
-        self.featuresClassifier = xgb.XGBClassifier(objective='binary:hinge',
-                                                    n_estimators=90,
-                                                    seed=420,
-                                                    tree_method="gpu_hist",
-                                                    predictor="gpu_predictor",
-                                                    booster="gbtree",
-                                                    )
-        # Vader
-        self.sentimentAnalyzer = SentimentIntensityAnalyzer()
-
-        #Final Layer
-        #self.unionLayer = Union_ARCH()
-        self.unionLayer = kwargs.get('union', None)
-        if  self.unionLayer==None:
-            self.unionLayer = sklearn.neural_network.MLPClassifier(solver='sgd',
-                                                               alpha=1e-3,
-                                                               activation='identity',
-                                                               hidden_layer_sizes=(20,40,20),
-                                                               random_state=1)
-
+        self.featuresClassifier = joblib.load(routes[1])
+        # Final Layer
+        self.unionLayer = joblib.load(routes[2])
 
     def fit(self):
         self.titleClassifier= self.titleClassifier.fit(self.train_data_Titles["x"],self.train_data_Titles["y"])
@@ -80,6 +109,7 @@ class Model:
         self.unionLayer.fit(data,self.train_data_Titles["y"])
         #Save Settings
         print("Training done")
+        self.saveModel()
 
     def getArrayForUnion(self, index):
         data = [self.train_data_Titles["x"][index]]
@@ -123,10 +153,11 @@ class Model:
                 neu += output["neu"]
                 pos += output["pos"]
             #Final
-            pred = self.unionLayer.predict([[y[0],y_proba[0][0],y_proba[0][0],y_feat[0],y_feat_proba[0][0],y_feat_proba[0][1],neg,neu,pos]])
+            pred = self.unionLayer.predict([[y[0],y_proba[0][0],y_proba[0][1],y_feat[0],y_feat_proba[0][0],y_feat_proba[0][1],neg,neu,pos]])
         else:
             pred = y
-        return pred
+            return pred,y_proba,[0,0],0,0,0
+        return pred,y_proba,y_feat_proba,neg,neu,pos
 
     def test(self):
         y=[]
