@@ -3,8 +3,6 @@ from copy import copy, deepcopy
 from locale import atoi
 import re
 
-import emoji as emoji
-
 from Tools.files import readFile
 
 
@@ -95,7 +93,10 @@ class VideoInfo:
     def countSuperlatives(self,title) -> int:
         #TODO: Open file of superlatives
         counter = 0
-        superlatives = readFile(os.getcwd()+"\..\Classification\DecisionTree\superlatives.json")
+        if "DataRetrieval" in os.getcwd():
+            superlatives = readFile(os.getcwd()+"\..\Classification\DecisionTree\superlatives.json")
+        else:
+            superlatives = readFile(os.getcwd() + "\Classification\DecisionTree\superlatives.json")
         for word in title.split(" "):
             if word in superlatives["list"]:
                 counter += 1

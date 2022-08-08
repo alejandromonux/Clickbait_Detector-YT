@@ -13,9 +13,14 @@ def initializeTree() -> DecisionTreeClassifier:
     tree.criterion = "entropy"
     return tree
 
-def constructDataFromIndexes(arrays, onlytitles, merge):
-    data_Titles,titles = constructData(os.getcwd() + "/adjusted_database.json", onlytitles=True, merge=False)
-    data_Features,titles = constructData(os.getcwd() + "/adjusted_database.json", onlytitles=False, merge=False)
+def constructDataFromIndexes(arrays, onlytitles, merge,**kwargs):
+    db_name = kwargs.get("adjusted_database",None)
+    if db_name is None:
+        data_Titles,titles = constructData(os.getcwd() + "/adjusted_database.json", onlytitles=True, merge=False)
+        data_Features,titles = constructData(os.getcwd() + "/adjusted_database.json", onlytitles=False, merge=False)
+    else:
+        data_Titles, titles = constructData(db_name, onlytitles=True, merge=False)
+        data_Features, titles = constructData(db_name, onlytitles=False, merge=False)
 
     train_data_Titles = {"x":np.array(data_Titles["x"])[arrays[0]], "y":np.array(data_Titles["y"])[arrays[0]]}
     test_data_Titles = {"x":np.array(data_Titles["x"])[arrays[1]], "y":np.array(data_Titles["y"])[arrays[1]]}
