@@ -1,0 +1,35 @@
+<html>
+    <head>
+      {% if title %}
+      <title>{{ title }} - Baitspector</title>
+      {% else %}
+      <title>Baitspector</title>
+      {% endif %}
+    {{ bootstrap.load_css() }}
+    </head>
+    <body style="padding:0;margin:0">
+        {% block navbar %}
+            <nav class="navbar navbar-expand-lg navbar-light" style="background-color: #ac0d17;">
+                    <a class="navbar-brand text-white" style="margin-left: 20px;" href="/index">
+                        <img src="https://cdn3.iconfinder.com/data/icons/fish/154/fishing-512.png" alt="" width="35" height="35">
+                        Baitspector
+                    </a>
+
+                    <a class="navbar-toggler nav-link text-white border" style="margin-right: 5px;" href="/about">About</a>
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <ul class="navbar-nav mr-auto">
+                        <li class="nav-item active">
+                            <a class="nav-link text-white" href="/index">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="/about">About</a>
+                        </li>
+                        </ul>
+                    </div>
+                </nav>
+        {% endblock %}
+
+        {% block app_content %}{% endblock %}
+        {{ bootstrap.load_js() }}
+    </body>
+</html>

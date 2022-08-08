@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+    <div class="container mt-3">
+        {% if result %}
+        <div class="text-center">
+            <img src={{result.thumbnail}} class="img-fluid" alt="Video Thumbnail">
+            <h2>{{result.title}}</h2>
+            {% if result.rating == 1 %}
+                <h3>Rating: No Clickbait</h3>
+            {% else %}
+                <h3>Rating: Clickbait</h3>
+            {% endif %}
+
+        </div>
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Probabilidad según el título</h5>
+                        <div class="card-text row">
+                            <div class="col text-center">
+                                <p class="fw-semibold">Clickbait</p>
+                                <p class="fw-normal badge bg-danger fs-6">{{result.title_prob_0}}</p>
+                            </div>
+                            <div class="col text-center">
+                                <p class="fw-semibold">No-clickbait</p>
+                                <p class="fw-normal badge bg-success fs-6" >{{result.title_prob_1}}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {%if result.feat_prob == 1 %}
+            <div class="col">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Probabilidad según las features</h5>
+                        <div class="card-text row">
+                            <div class="col text-center">
+                                <p class="fw-semibold">Clickbait</p>
+                                <p class="fw-normal badge bg-danger fs-6">{{result.feat_prob_0}}</p>
+                            </div>
+                            <div class="col text-center">
+                                <p class="fw-semibold">No-clickbait</p>
+                                <p class="fw-normal badge bg-success fs-6">{{result.feat_prob_1}}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {%if result.sentiment == 1 %}
+            <div class="col">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Sentimientos de los comentarios</h5>
+                        <div class="card-text row">
+                            <div class="col text-center">
+                                <p class="fw-semibold">Positividad</p>
+                                <p class="fw-normal badge bg-success fs-6">{{result.sentiment_neg}}</p>
+                            </div>
+                            <div class="col text-center">
+                                <p class="fw-semibold">Neutralidad</p>
+                                <p class="fw-normal badge bg-secondary fs-6">{{result.sentiment_neu}}</p>
+                            </div>
+                            <div class="col text-center">
+                                <p class="fw-semibold">Negatividad</p>
+                                <p class="fw-normal badge bg-danger fs-6">{{result.sentiment_pos}}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        <div class="container text-center mt-3">
+            <a class="btn btn-danger"  href="/index"> Nuevo análisis</a>
+        </div>
+    </div>
+{% endblock %}
