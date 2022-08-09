@@ -1,8 +1,9 @@
+import os
 from urllib import request
 
 from flask import render_template, url_for, request
 from app.__init__ import model, cache
-from DataRetrieval.yt_api import dataForTheWeb
+from DataRetrieval.yt_api import dataForTheWeb, getURL
 from app import app
 
 @app.route('/',  methods=['GET', 'POST'])
@@ -15,14 +16,14 @@ def index():
         query=form.videoId.data
         return redirect(url_for('results', url=query))
     from flask import make_response
-    if request.cookies.get('userID') == None:
+    if request.cookies.get('session') == None:
         response = make_response(render_template('index.html', title='Home', form=form))
         from app.__init__ import userCounter
         userCounter += 1
-        response.set_cookie(key='userID',value=str(userCounter))
+        response.set_cookie(key='session',value=str(userCounter))
     else:
         try:
-            videolist = cache[request.cookies.get('userID')]
+            videolist = cache[request.cookies.get('session')]
             response = make_response(render_template('index.html', title='Home', form=form,lastRevisions=videolist))
         except:
             response = make_response(render_template('index.html', title='Home', form=form))
@@ -30,11 +31,13 @@ def index():
 
 @app.route('/results')
 def results():
-    name = request.cookies.get('userID')
+    name = request.cookies.get('session')
 
     url = request.args.get('url', None)
-    url = url.split("?v=")[1]
+    url=getURL(url)
     video = dataForTheWeb(url)
+    from Tools.logs import appendToLogs
+    appendToLogs(os.getcwd()+"\\DataRetrieval\\webRequestLogs.json",video)
     from Tools.Preprocessing import arrayBERTPreprocessing
     predictionObject = arrayBERTPreprocessing([video],[0])
 
