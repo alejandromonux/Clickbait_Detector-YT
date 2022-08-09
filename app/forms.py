@@ -4,4 +4,5 @@ from wtforms.validators import DataRequired
 
 class videoForm(FlaskForm):
     videoId = StringField('videoId', validators=[DataRequired()])
-    submit = SubmitField('Analiza el video')
+    #submit = SubmitField('Analiza el video')
+    submit = SubmitField('Analyze the video')
