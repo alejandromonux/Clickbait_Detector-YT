@@ -256,3 +256,11 @@ if __name__ == "__main__":
         titles = tfidf_encoding(titles)
         for i in range(len(titles)): db["list"][i]["title"]=titles[i].tolist()
         writeFile(os.getcwd()+"\\encoded_database.json",db_clean)
+    elif option=="PASSTHEMTOTHEMODEL":
+        db = readFile(os.getcwd()+"\\webRequestLogs.json")
+        model = Model(readFile(os.getcwd() + "\\adjusted_database.json"), [[], []], willImport=True)
+        model.loadModel(prefix="\\DataRetrieval\\")
+        for i in range(len(db["list"])):
+            predictionObject = arrayBERTPreprocessing([db["list"][i]], [0])
+            db["list"][i]["rating"]=model.predict(predictionObject)
+        writeFile(os.getcwd()+"\\webRequestLogs.json")
