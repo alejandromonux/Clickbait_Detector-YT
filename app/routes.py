@@ -37,11 +37,12 @@ def results():
     url=getURL(url)
     video = dataForTheWeb(url)
     from Tools.logs import appendToLogs
-    appendToLogs(os.getcwd()+"\\DataRetrieval\\webRequestLogs.json",video)
+
     from Tools.Preprocessing import arrayBERTPreprocessing
     predictionObject = arrayBERTPreprocessing([video],[0])
 
     pred,y_proba,y_feat_proba,neg,neu,pos = model.predict(predictionObject["x"][0])
+    appendToLogs(os.getcwd()+"\\DataRetrieval\\webRequestLogs.json",video, pred)
     try:
         feat_prob=0 if y_feat_proba[0][0] == 0 and y_feat_proba[0][1] == 0 else 1
         feat_proba_0 = y_feat_proba[0][0]
