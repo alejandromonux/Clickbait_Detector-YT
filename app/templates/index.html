@@ -5,6 +5,9 @@
 
             <h1 class="text-center mt-2">Clickbait Detection</h1>
             <h3 class="text-center">Is your video sensationalist?</h3>
+            {% if error %}
+                <p class="fw-bold text-center text-danger">{{ error }}</p>
+            {% endif %}
 
             <form class="align-self-center col-xs-4" action="" method="post">
                     {{ form.csrf_token() }}

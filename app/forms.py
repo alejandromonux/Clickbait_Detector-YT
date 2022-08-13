@@ -6,3 +6,8 @@ class videoForm(FlaskForm):
     videoId = StringField('videoId', validators=[DataRequired()])
     #submit = SubmitField('Analiza el video')
     submit = SubmitField('Analyze the video')
+
+class FeedbackFormPositive(FlaskForm):
+    submit = SubmitField('I agree')
+class FeedbackFormNegative(FlaskForm):
+    submit = SubmitField('I disagree')
