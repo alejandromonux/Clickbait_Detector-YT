@@ -5,7 +5,7 @@ import re
 
 from Tools.files import readFile
 
-
+#This class is used for the decision tree/Random Forest and to organize the data as a whole
 class VideoInfo:
     emojiCount = 0
     hasTypicalPhrase = False
@@ -91,7 +91,7 @@ class VideoInfo:
             return False
 
     def countSuperlatives(self,title) -> int:
-        #TODO: Open file of superlatives
+        #Open file of superlatives
         counter = 0
         if "DataRetrieval" in os.getcwd():
             superlatives = readFile(os.getcwd()+"\..\Classification\DecisionTree\superlatives.json")
@@ -125,8 +125,8 @@ class VideoInfo:
             except Exception as e:
                 print(e)
 
+    #DEPRECATED
     def hasSensationalistAdjectives(self,title) -> int:
-        #TODO: Open file of adjectives
         subStrings = title.split(" ")
 
     def getWordCount(self,title) -> int:

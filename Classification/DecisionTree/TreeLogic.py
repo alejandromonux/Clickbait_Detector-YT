@@ -13,6 +13,8 @@ def initializeTree() -> DecisionTreeClassifier:
     tree.criterion = "entropy"
     return tree
 
+#We use this function to construct the data we'll then use to pass to the different models.
+#We construct it based on indexes previously defined
 def constructDataFromIndexes(arrays, onlytitles, merge,**kwargs):
     db_name = kwargs.get("adjusted_database",None)
     if db_name is None:
@@ -45,7 +47,8 @@ def constructDataFromIndexes(arrays, onlytitles, merge,**kwargs):
 
     return train_data_Titles,test_data_Titles,train_data_Features,test_data_Features,train_comments,test_comments
 
-
+#We use this function to construct the data we'll then use to pass to the different models.
+#We construct it based a single database, with no split
 def constructData(database, onlytitles, merge):
     data = {"x": [],
             "y": []}
@@ -64,7 +67,7 @@ def constructData(database, onlytitles, merge):
         i += 1
     return data,titles
 
-
+#We look for the best features among those fed to the decision tree
 def getBestFeatures():
     tree = initializeTree()
     data = constructData(os.getcwd() + "\database.json",False)
@@ -78,7 +81,7 @@ def getBestFeatures():
     #    os.makedirs(os.getcwd()+'/../DecisionTree/tree.dot')
     out = export_graphviz(tree, out_file=os.getcwd() + '/../Classification/DecisionTree/tree.dot')
 
-
+#We find the averages of the data
 def findAverage(num_classes, trim):
     data = constructData(os.getcwd() + "\database.json",onlytitles=False)
     index = 0

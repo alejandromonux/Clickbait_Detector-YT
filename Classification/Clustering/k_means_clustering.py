@@ -12,6 +12,7 @@ from sklearn.preprocessing import StandardScaler
 from Tools.files import writeFile, readFile
 
 
+#The data is plotted in 3D. Used for databases with +3 classes
 def plot3D(centroids, data, labels,classes):
     colors = ['brown', 'purple', 'cyan', 'green', 'orange']
     colors_centroids = ['b', 'g', 'r', 'm', 'y']
@@ -26,7 +27,7 @@ def plot3D(centroids, data, labels,classes):
                         title="Classes 3D")
     fig.show()
 
-
+#We plot the distribution of the classes for further analysis
 def resultsAnalysis(model, data, labels, classes):
     colors = ['brown', 'purple', 'cyan', 'green', 'orange']
     colors_centroids = ['b', 'g', 'r', 'm', 'y']
@@ -72,6 +73,7 @@ def resultsAnalysis(model, data, labels, classes):
     print("DEBUG")
 
 
+#We only get the titles in a database, outputtin an array of them
 def getTitles(database):
     out = []
     i = 0
@@ -80,7 +82,7 @@ def getTitles(database):
         i += 1
     return out
 
-
+#We plot the class distribution as a bar graph
 def plotTheClasses(graphic_bars):
     figure = plt.figure()
     ax = figure.add_axes([0, 0, 1, 1])
@@ -90,7 +92,7 @@ def plotTheClasses(graphic_bars):
     ax.bar(values, graphic_bars)
     plt.show()
 
-
+#We plot the elbow to look for the best K
 def plotTheElbow(y_values, x_value, title):
     plt.plot(x_value, y_values)
     plt.xlabel("Valor para K")
@@ -98,7 +100,7 @@ def plotTheElbow(y_values, x_value, title):
     plt.title(title)
     plt.show()
 
-
+#We classify everything automatically as a first filter
 def kmeans_test(k_clusters):
     from Tools.files import readFile
     database = readFile(os.getcwd() + "\encoded_database.json")
@@ -123,7 +125,7 @@ def kmeans_test(k_clusters):
         i += 1
     writeFile(os.getcwd() + "\encoded_database.json", database)
 
-
+#We look for the best K using the elbow method
 def elbowmethod_2():
     from Tools.files import readFile
     database = readFile(os.getcwd() + "\encoded_database.json")
@@ -148,7 +150,7 @@ def elbowmethod_2():
         silhouette_coefficients.append(score)
     plotTheElbow(silhouette_coefficients, [2, 3, 4, 5, 6, 7, 8, 9], "shilouette coficient")
 
-
+#We look for the best K using the elbow method
 def elbowmethod():
     from Tools.files import readFile
     database = readFile(os.getcwd() + "\encoded_database.json")
