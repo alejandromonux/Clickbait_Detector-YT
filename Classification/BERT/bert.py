@@ -69,6 +69,7 @@ def bertEncoding(db_option):
     print("Hem acabat")
     writeFile(os.getcwd()+"\encoded_database.json", database)
 
+#We encode all elements from an array of videos.
 def bertencodingsArray(array,array_np,y):
     file = {"x":[]}
     tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
@@ -113,7 +114,7 @@ def bertencodingsArray(array,array_np,y):
     file["y"]=y
     return file
 
-
+#We do preprocessing and tokenize whatever's needed from an incoming array
 def bertPreprocessingArray(array):
     from transformers import AutoTokenizer
     tokenizer = AutoTokenizer.from_pretrained("bert-base-cased")
@@ -125,6 +126,7 @@ def bertPreprocessingArray(array):
                                         }
     return array
 
+#We preprocess a whole databse, rewriting it in the file "BERT_clean_database.json
 def bertPreprocessing(database):
     from transformers import AutoTokenizer
     tokenizer = AutoTokenizer.from_pretrained("bert-base-cased")
@@ -138,6 +140,7 @@ def bertPreprocessing(database):
         i+=1
     writeFile(os.getcwd()+"\BERT_clean_database.json", database)
 
+#FROM THIS POINT DOWNWARDS, THIS IS DEPRECATED WORK AND ONLY KEPT FOR LEGACY PURPOSES
 def plotTheFitting(history):
     from matplotlib import pyplot as plt
     figure, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 6))
@@ -158,7 +161,7 @@ def plotTheFitting(history):
     ax2.set_xlabel('Epoch')
     ax2.legend(['train', 'validation'])
 
-#DEPCRECATED
+#DEPRECATED
 #MAKES AVERAGE OF LAST 4 HIDDEN UNITS
 #TODO: Arreglarque pone NaN en sitios por algún motivo
 def bertEmbeddings_bad():
@@ -210,6 +213,7 @@ def bertEmbeddings_bad():
     print("Hem acabat")
     writeFile(os.getcwd()+"\encoded_database.json", database)
 
+#Adjust the size for the tensors to work correctly
 def adjustSizeForTensors(array,val):
     # Miramos de poner todas las entrada de igual longitud
     # Buscamos la longitud máxima
@@ -236,6 +240,7 @@ def adjustSizeForTensors(array,val):
         j+=1
     return array
 
+#We prepare the dataset
 def buildDataset(database, batch_size):
     import random
     #We randomize the array for better results

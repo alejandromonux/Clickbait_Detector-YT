@@ -1,6 +1,6 @@
 from torch import nn
 
-
+#DEPRECATED CLASS. NO LONGER USED.
 class clickBERT_Arch(nn.Module):
     def __init__(self, bert,classes):
         super(clickBERT_Arch, self).__init__()

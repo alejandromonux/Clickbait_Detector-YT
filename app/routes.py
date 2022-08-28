@@ -11,18 +11,23 @@ from app import app
 def index():
     from flask import render_template, flash, redirect
     from app.forms import videoForm
+    #Obtenemos el formulario
     form = videoForm()
     error = request.args.get('error', None)
+    #comprovamos si el formulario ha sido rellenado o no
     if form.validate_on_submit():
         query=form.videoId.data
+        #Pasamos a la pantalla de resultados
         return redirect(url_for('results', url=query))
     from flask import make_response
+    #Seteamos cookies si hace falta
     if request.cookies.get('session') == None:
         response = make_response(render_template('index.html', title='Home', form=form))
         from app.__init__ import userCounter
         userCounter += 1
         response.set_cookie(key='session',value=str(userCounter))
     else:
+        #Obtenemos la lista de videos para la pantalla de home
         try:
             videolist = cache[request.cookies.get('session')]
             response = make_response(render_template('index.html', title='Home', form=form,lastRevisions=videolist,error=error))
@@ -51,7 +56,7 @@ def results():
         modifyLogs(os.getcwd()+"\\DataRetrieval\\webRequestLogs.json",cache[name][len(cache[name])-1], user_opinion)
         return redirect(url_for('index'))
 
-
+    #We analize the video
     url=getURL(url)
     video = dataForTheWeb(url)
     if video == 0:
