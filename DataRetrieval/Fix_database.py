@@ -13,9 +13,9 @@ def ratingsFromAll():
 def isDubious(dubiousItem):
     return dubiousItem.capitalLetterWordsCount>=1 or dubiousItem.emojiCount >= 1 or dubiousItem.superlatives>=1 or dubiousItem.punctuationCount > 1
 
-def dabasefix(revised_db, new_db, rating_limit, checkDubiousOnes):
+def dabasefix(revised_db, new_db, rating_limit, checkDubiousOnes,**kwargs):
     finish = False
-
+    weblogs = kwargs.get("weblogs",False)
     for n_item in new_db["list"]:
         found = False
         next = False
@@ -42,6 +42,11 @@ def dabasefix(revised_db, new_db, rating_limit, checkDubiousOnes):
                     or (checkDubiousOnes is False):
                 print(n_item["title"])
                 print("rating: "+str(n_item["rating"]))
+                if weblogs == True:
+                    try:
+                        print("Opinion:" + str(n_item["opinion"]))
+                    except:
+                        print("No opinion has been registered")
                 try:
                     print("Subs: " + str(dubiousItem.subs))
                     print("SubsPerView: " + str(dubiousItem.subsPerView))
@@ -49,7 +54,6 @@ def dabasefix(revised_db, new_db, rating_limit, checkDubiousOnes):
                     print("Likes: " + str(dubiousItem.likes))
                 except:
                     print("SubsPerView Unavailable")
-                #print("Likes: " + str(n_item["likes"])+"\n")
 
                 tryAgain = True
                 while tryAgain:
@@ -80,6 +84,8 @@ def dabasefix(revised_db, new_db, rating_limit, checkDubiousOnes):
                     new_db["list"][new_db["list"].index(n_item)]["revised"] = 1
                     n_item["rating"] = rating
                     n_item["revised"] = 1
+                    if("opinion" in n_item.keys()):
+                        n_item.pop("opinion")
                     revised_db["list"].append(n_item)
                 else:
                     #new_db["list"].pop(new_db["list"].index(n_item))
@@ -89,7 +95,7 @@ def dabasefix(revised_db, new_db, rating_limit, checkDubiousOnes):
         else:
             found=False
     writeFile(os.getcwd() + "\\adjusted_database.json", revised_db)
-    #writeFile(os.getcwd()+"\\adjusted_database.json", new_db)
+    #writeFile(os.getcwd()+"\\webRequestLogs.json", new_db)
 
 def databaseAdding(old_db, new_db):
     found = False

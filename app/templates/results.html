@@ -7,7 +7,7 @@
             <img src={{result.thumbnail}} class="img-fluid" alt="Video Thumbnail">
             <h2>{{result.title}}</h2>
             {% if result.rating == 1 %}
-                <h3>Rating: No Clickbait</h3>
+                <h3>Rating: Not Clickbait</h3>
             {% else %}
                 <h3>Rating: Clickbait</h3>
             {% endif %}
@@ -17,14 +17,15 @@
             <div class="col">
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title">Probabilidad según el título</h5>
+                        <!-- <h5 class="card-title">Probabilidad según el título</h5> -->
+                        <h5 class="card-title">Title probability</h5>
                         <div class="card-text row">
                             <div class="col text-center">
                                 <p class="fw-semibold">Clickbait</p>
                                 <p class="fw-normal badge bg-danger fs-6">{{result.title_prob_0}}</p>
                             </div>
                             <div class="col text-center">
-                                <p class="fw-semibold">No-clickbait</p>
+                                <p class="fw-semibold">Not-clickbait</p>
                                 <p class="fw-normal badge bg-success fs-6" >{{result.title_prob_1}}</p>
                             </div>
                         </div>
@@ -35,14 +36,15 @@
             <div class="col">
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title">Probabilidad según las features</h5>
+                        <!-- <h5 class="card-title">Probabilidad según las features</h5> -->
+                        <h5 class="card-title">Features Probability</h5>
                         <div class="card-text row">
                             <div class="col text-center">
                                 <p class="fw-semibold">Clickbait</p>
                                 <p class="fw-normal badge bg-danger fs-6">{{result.feat_prob_0}}</p>
                             </div>
                             <div class="col text-center">
-                                <p class="fw-semibold">No-clickbait</p>
+                                <p class="fw-semibold">Not-clickbait</p>
                                 <p class="fw-normal badge bg-success fs-6">{{result.feat_prob_1}}</p>
                             </div>
                         </div>
@@ -54,18 +56,19 @@
             <div class="col">
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title">Sentimientos de los comentarios</h5>
+                        <!-- <h5 class="card-title">Sentimientos de los comentarios</h5> -->
+                        <h5 class="card-title">Comments' sentiments</h5>
                         <div class="card-text row">
                             <div class="col text-center">
-                                <p class="fw-semibold">Positividad</p>
+                                <p class="fw-semibold">Positivity</p>
                                 <p class="fw-normal badge bg-success fs-6">{{result.sentiment_neg}}</p>
                             </div>
                             <div class="col text-center">
-                                <p class="fw-semibold">Neutralidad</p>
+                                <p class="fw-semibold">Neutrality</p>
                                 <p class="fw-normal badge bg-secondary fs-6">{{result.sentiment_neu}}</p>
                             </div>
                             <div class="col text-center">
-                                <p class="fw-semibold">Negatividad</p>
+                                <p class="fw-semibold">Negativity</p>
                                 <p class="fw-normal badge bg-danger fs-6">{{result.sentiment_pos}}</p>
                             </div>
                         </div>
@@ -75,8 +78,33 @@
             {% endif %}
         </div>
         {% endif %}
+        {%if formpos %}
         <div class="container text-center mt-3">
-            <a class="btn btn-danger"  href="/index"> Nuevo análisis</a>
+            <p class="fw-bold">Do you agree with this result?</p>
+            <div class="row offset-sm-4">
+                <div class="col-2">
+                    <form class="align-self-center col-xs-4" action="" method="get">
+                        {{ formpos.csrf_token() }}
+                        <div class="container form-group ">
+                            {{formpos.submit(class="btn btn-success align-self-center ")}}
+                        </div>
+                    </form>
+                </div>
+        {% endif %}
+        {%if formneg %}
+                <div class="col-6">
+                    <form class="align-self-center col-xs-4" action="" method="get">
+                        {{ formneg.csrf_token() }}
+                        <div class="container form-group ">
+                            {{formneg.submit(class="btn btn-danger align-self-center")}}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        <div class="container text-center mt-3">
+            <a class="btn btn-danger"  href="/index"> New Analysis</a>
         </div>
     </div>
 {% endblock %}

@@ -3,14 +3,18 @@
 {% block app_content %}
 {% from 'bootstrap4/form.html' import render_form_row %}
 
-            <h1 class="text-center mt-2">Detección de clickbait</h1>
-            <h3 class="text-center">Es tu video sensacionalista?</h3>
+            <h1 class="text-center mt-2">Clickbait Detection</h1>
+            <h3 class="text-center">Is your video sensationalist?</h3>
+            {% if error %}
+                <p class="fw-bold text-center text-danger">{{ error }}</p>
+            {% endif %}
 
             <form class="align-self-center col-xs-4" action="" method="post">
                     {{ form.csrf_token() }}
                 <div class="container form-group ">
                   <!-- <input type="email" class="form-control " id="videoURL" placeholder="Introduce la url"> -->
-                  {{ form.videoId(class="form-control",id="videoId", placeholder="Introduce la url") }}
+                  <!-- {{ form.videoId(class="form-control",id="videoId", placeholder="Introduce la url",maxlength="100") }}-->
+                    {{ form.videoId(class="form-control",id="videoId", placeholder="Introduce the url",maxlength="100") }}
                     <div class="row align-items-center">
                     <div class="col"></div>
                     <div class="mt-2 col offset-sm-1">
@@ -22,7 +26,8 @@
                 </div>
             </form>
 
-            <div class="container mt-4 text-color-">Análisis recientes</div>
+            <!-- <div class="container mt-4 text-color-">Análisis recientes</div> -->
+            <div class="container mt-4 text-color-">Recent Analysis</div>
             <div class="container" style="overflow-y:auto;height: 400px;">
                 {% if lastRevisions %}
                 {% for revision in lastRevisions %}
@@ -60,7 +65,7 @@
                 {% else %}
                     <div class="container " >
                         <div class="mt-1 mb-1 border rounded text-center"style="background-color: lightgrey">
-                               <p class="lead">No hay análisis recientes</p>
+                               <p class="lead">No recent Analysis</p>
                         </div>
                     </div>
                 {% endif %}

@@ -88,8 +88,8 @@ if __name__ == "__main__":
             """
             #Temporalmente, versión de databaseFix
             a_db = readFile(os.getcwd() + "\\adjusted_database.json")
-            db = readFile(os.getcwd() + "\database.json")
-            dabasefix(a_db, db,int(option3), False)
+            db = readFile(os.getcwd() + "\webRequestLogs.json")
+            dabasefix(a_db, db,int(option3), False,weblogs=True)
             #contingencyPlan("",readFile(os.getcwd() + "\\database.json"))
             pass
         elif option2 == '2':
@@ -256,3 +256,61 @@ if __name__ == "__main__":
         titles = tfidf_encoding(titles)
         for i in range(len(titles)): db["list"][i]["title"]=titles[i].tolist()
         writeFile(os.getcwd()+"\\encoded_database.json",db_clean)
+    elif option=="PASSTHEMTOTHEMODEL":
+        db = readFile(os.getcwd()+"\\webRequestLogs.json")
+        model = Model(readFile(os.getcwd() + "\\adjusted_database.json"), [[], []], willImport=True)
+        model.loadModel(prefix="\\")
+        for i in range(len(db["list"])):
+            predictionObject = arrayBERTPreprocessing([db["list"][i]], [0])
+            output=model.predict(predictionObject["x"][0])
+            db["list"][i]["rating"]= output[0]
+        writeFile(os.getcwd()+"\\webRequestLogs.json", db)
+    elif option=="USAGESTATS":
+        y = []
+        y_true = []
+        db = readFile(os.getcwd() + "\\webRequestLogs.json")
+        a_db = readFile(os.getcwd() + "\\adjusted_database.json")
+        for item in db["list"]:
+            for item_adb in a_db["list"]:
+                if item["title"]==item_adb["title"]:
+                    y.append(item["rating"])
+                    y_true.append(item_adb["rating"])
+        print(classification_report(y, y_true))
+        cf_matrix = confusion_matrix(y, y_true)
+        print(cf_matrix)
+        # We plot the matrix
+        import seaborn as sns
+        import matplotlib.pyplot as plt
+        ax = sns.heatmap(cf_matrix, annot=True, cmap='Blues')
+        ax.set_title('Confusion Matrix\n\n');
+        ax.set_xlabel('\nPredicted Values')
+        ax.set_ylabel('Actual Values ');
+        ax.xaxis.set_ticklabels(['0', '1'])
+        ax.yaxis.set_ticklabels(['0', '1'])
+        # Display the visualization of the Confusion Matrix.
+        plt.show()
+
+    elif option=="USERSTATS":
+        y = []
+        y_true = []
+        db = readFile(os.getcwd() + "\\webRequestLogs.json")
+        for item in db["list"]:
+            try:
+                y.append(item["opinion"])
+                y_true.append(item["rating"])
+            except:
+                print("Video doesn't have opinion")
+        print(classification_report(y, y_true))
+        cf_matrix = confusion_matrix(y, y_true)
+        print(cf_matrix)
+        # We plot the matrix
+        import seaborn as sns
+        import matplotlib.pyplot as plt
+        ax = sns.heatmap(cf_matrix, annot=True, cmap='Blues')
+        ax.set_title('Confusion Matrix\n\n');
+        ax.set_xlabel('\nPredicted Values')
+        ax.set_ylabel('Actual Values ');
+        ax.xaxis.set_ticklabels(['0', '1'])
+        ax.yaxis.set_ticklabels(['0', '1'])
+        # Display the visualization of the Confusion Matrix.
+        plt.show()
