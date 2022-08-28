@@ -150,3 +150,13 @@ Classification/BERT/saved_weights.pt
 Classification/DecisionTree/tree.dot
 DataRetrieval/clickbait_data.csv
 DataRetrieval/encoded_other.json
+ngrok.exe
+DataRetrieval/webRequestLogs.json
+DataRetrieval/tests_other/encoded_other.json
+DataRetrieval/encoded_database.json
+DataRetrieval/database.json
+DataRetrieval/BERT_encoded_database.json
+DataRetrieval/BERT_clean_database.json
+Classification/DecisionTree/tree.dot
+DataRetrieval/webRequestLogs.json
+DataRetrieval/tests_other/encoded_other.json
