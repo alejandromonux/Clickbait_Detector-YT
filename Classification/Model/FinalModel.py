@@ -14,14 +14,15 @@ from Tools.Preprocessing import textCleanupForVader
 
 
 class Model:
-    umbral = 0.8
+    umbral = 0.8 #Used for purposes of saving computational resources
     def __init__(self, database,indexes,**kwargs):
-        willImport = kwargs.get('willImport', False)
-        flask_direction =kwargs.get('flask_direction', None)
-        self.umbral=kwargs.get('umbral', None)
+        willImport = kwargs.get('willImport', False) #We check if we need to import weights or train
+        flask_direction =kwargs.get('flask_direction', None) #We check if another directory is needed
+        self.umbral=kwargs.get('umbral', None) #We check for a previously defined limit
         if self.umbral == None:
             self.umbral=0.8
         random.shuffle(database["list"])
+        #If we do not import, we  create and train everything from scratch
         if not willImport:
             indices = range(len(database["list"]))
             train_indices, test_indices = train_test_split(indices,  random_state=420, test_size=0.3)
@@ -72,6 +73,7 @@ class Model:
                                                                    hidden_layer_sizes=(20,40,20),
                                                                    random_state=1)
         else:
+            #If we do import, we just create default classifiers
             self.titleClassifier = RandomForestClassifier()
             # Feats
             self.featuresClassifier = xgb.XGBClassifier()
@@ -79,6 +81,8 @@ class Model:
             self.sentimentAnalyzer = SentimentIntensityAnalyzer()
             # Final Layer
             self.unionLayer = sklearn.neural_network.MLPClassifier()
+
+    #We dump the models from this training
     def saveModel(self):
         import joblib
         joblib.dump(self.titleClassifier,"RandomForest.json")
@@ -86,6 +90,7 @@ class Model:
         #self.featuresClassifier.save_model("XGBoost.json")
         joblib.dump(self.unionLayer,"UnionLayer.json")
 
+    #We load the models from the last training
     def loadModel(self,**kwargs):
         routes= ["RandomForest.json","XGBoost.json","UnionLayer.json"]
         prefix = kwargs.get('prefix', "")
@@ -97,6 +102,7 @@ class Model:
         # Final Layer
         self.unionLayer = joblib.load(routes[2])
 
+    #We train every part separately
     def fit(self):
         self.titleClassifier= self.titleClassifier.fit(self.train_data_Titles["x"],self.train_data_Titles["y"])
         self.featuresClassifier= self.featuresClassifier.fit(self.train_data_Features["x"], self.train_data_Features["y"])
@@ -111,6 +117,7 @@ class Model:
         print("Training done")
         self.saveModel()
 
+    #We construct the array for the MLP
     def getArrayForUnion(self, index):
         data = [self.train_data_Titles["x"][index]]
         data_f = [self.train_data_Features["x"][index]]
@@ -129,12 +136,14 @@ class Model:
         return [y[0],y_proba[0][0],y_proba[0][0],y_feat[0],y_feat_proba[0][0],y_feat_proba[0][1],neg,neu,pos]
 
 
+    #We predict a set of videos
     def predictList(self,list):
         preds = []
         for item in list:
             preds.append(self.predict(item))
         return preds
 
+    #We predict a single video
     def predict(self,object):
 
         y       =self.titleClassifier.predict([object["title"]])
@@ -160,6 +169,7 @@ class Model:
         pred = pred[0].item()
         return pred,y_proba,y_feat_proba,neg,neu,pos
 
+    #We test the model with a set of data already loaded inside it
     def test(self):
         y=[]
         import time
@@ -189,11 +199,13 @@ class Model:
 
         return y,self.test_data_Titles["y"], (t1-t0)
 
+    #We get the model's parameters
     def get_params(self,deep=True):
         from Tools.files import readFile
         return {"umbral" : self.umbral,"uinon" : self.unionLayer, "database": readFile(os.getcwd() + "\\adjusted_database.json"),
                 "indexes": [[], []]}
 
+    #We set necessary parameters
     def set_params(self, **parameters):
         for parameter, value in parameters.items():
             setattr(self, parameter, value)

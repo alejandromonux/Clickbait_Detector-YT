@@ -8,7 +8,7 @@ from Classification.DecisionTree.TreeLogic import constructData
 import xgboost as xgb
 
 def  XGBoost():
-    #We create construct the data
+    #We construct the data
     data,titles = constructData(os.getcwd() + "/adjusted_database.json", onlytitles=False, merge=False)
     #We split the data
     train_x, test_x, train_y, test_y = train_test_split(data["x"], data["y"],

@@ -5,9 +5,9 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from Tools.Preprocessing import textCleanupForVader
 
 
+#We test it out by analyzing every single phrase from a previously created dataset
 def sentimentAnalysis(database):
     analyzer = SentimentIntensityAnalyzer()
-
     for j in range(len(database["list"])):
         try:
             for i in range(len(database["list"][j]["comments"])):
@@ -17,7 +17,7 @@ def sentimentAnalysis(database):
         except Exception as e:
             print(e)
 
-
+#We analyze one comment
 def analyzeOnePhrase(text):
     analyzer = SentimentIntensityAnalyzer()
     text = textCleanupForVader(text)

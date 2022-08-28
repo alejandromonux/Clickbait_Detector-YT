@@ -1,6 +1,7 @@
 from torch import nn
 
-
+#DEPRECATED
+#This was used during the first attempt, then dropped. Kept for legacy purposes.
 class Union_ARCH(nn.Module):
     def __init__(self, ):
         super(Union_ARCH, self).__init__()
