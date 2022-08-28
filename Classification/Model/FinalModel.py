@@ -155,8 +155,9 @@ class Model:
             #Final
             pred = self.unionLayer.predict([[y[0],y_proba[0][0],y_proba[0][1],y_feat[0],y_feat_proba[0][0],y_feat_proba[0][1],neg,neu,pos]])
         else:
-            pred = y
+            pred = y[0].item()
             return pred,y_proba,[0,0],0,0,0
+        pred = pred[0].item()
         return pred,y_proba,y_feat_proba,neg,neu,pos
 
     def test(self):

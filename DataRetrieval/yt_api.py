@@ -4,7 +4,7 @@ import googleapiclient.discovery
 from Tools.files import readFile, writeFile
 
 
-def getVideoComments(name,id):
+def getVideoComments(name, id):
     # API information
     api_service_name = "youtube"
     api_version = "v3"
@@ -28,6 +28,7 @@ def getVideoComments(name,id):
         print(e)
         print("problem with Video " + name + " / ID: " + id)
     return comments
+
 
 def getChannelComments(name, id, database):
     # API information
@@ -63,15 +64,17 @@ def getChannelComments(name, id, database):
     for item in response['items']:
         for example in database["list"]:
             if item['snippet']['title'] == example["title"]:
-                comments = getVideoComments(name=item['snippet']['title'],id=item['snippet']['resourceId']['videoId'])
-                if len(comments)==0:
+                comments = getVideoComments(name=item['snippet']['title'], id=item['snippet']['resourceId']['videoId'])
+                if len(comments) == 0:
                     break
                 else:
                     database["list"][database["list"].index(example)]["comments"] = comments
-                    database["list"][database["list"].index(example)]["videoId"] = item['snippet']['resourceId']['videoId']
+                    database["list"][database["list"].index(example)]["videoId"] = item['snippet']['resourceId'][
+                        'videoId']
         index += 1
 
     return database
+
 
 def getVideos(name, id, database):
     # API information
@@ -144,6 +147,7 @@ def getVideos(name, id, database):
 
     return database
 
+
 def commentsLoop():
     channels = readFile(os.getcwd() + "\channels.json")
     database = readFile(os.getcwd() + "/adjusted_database.json")
@@ -156,6 +160,7 @@ def commentsLoop():
 
     writeFile(os.getcwd() + "/adjusted_database.json", database)
     print("I hem acabat!")
+
 
 def channelLoop():
     """
@@ -187,6 +192,7 @@ def channelLoop():
 
     print("I hem acabat!")
 
+
 def dataForTheWeb(videoID):
     # API information
     api_service_name = "youtube"
@@ -211,22 +217,32 @@ def dataForTheWeb(videoID):
         # Query execution
         responseChannel = request.execute()
 
-        video={
-                    "author": responseChannel["items"][0]["snippet"]["title"],
-                    "thumbnail":  infoVideo['items'][0]['snippet']["thumbnails"]["medium"]["url"],
-                    "subscribers": responseChannel["items"][0]["statistics"]["subscriberCount"],
-                    "title": infoVideo['items'][0]['snippet']["title"],
-                    "description": infoVideo['items'][0]['snippet']["description"],
-                    "category": infoVideo['items'][0]['snippet']['categoryId'],
-                    "publishDate": infoVideo['items'][0]['snippet']['publishedAt'],
-                    "views": infoVideo['items'][0]['statistics']['viewCount'],
-                    "likes": infoVideo['items'][0]['statistics']['likeCount'],
-                    "fav_count": infoVideo['items'][0]['statistics']['favoriteCount'],
-                    "num_comments": infoVideo['items'][0]['statistics']['commentCount'],
-                    "rating": "0"
-                }
+        video = {
+            "author": responseChannel["items"][0]["snippet"]["title"],
+            "thumbnail": infoVideo['items'][0]['snippet']["thumbnails"]["medium"]["url"],
+            "subscribers": responseChannel["items"][0]["statistics"]["subscriberCount"],
+            "title": infoVideo['items'][0]['snippet']["title"],
+            "description": infoVideo['items'][0]['snippet']["description"],
+            "category": infoVideo['items'][0]['snippet']['categoryId'],
+            "publishDate": infoVideo['items'][0]['snippet']['publishedAt'],
+            "views": infoVideo['items'][0]['statistics']['viewCount'],
+            "likes": infoVideo['items'][0]['statistics']['likeCount'],
+            "fav_count": infoVideo['items'][0]['statistics']['favoriteCount'],
+            "num_comments": infoVideo['items'][0]['statistics']['commentCount'],
+            "rating": "0"
+        }
     except Exception as e:
         print("problem with Video " + videoID)
         return 0
-    video["comments"]=getVideoComments(video["author"],videoID)
+    video["comments"] = getVideoComments(video["author"], videoID)
     return video
+
+
+def getURL(url):
+    if "youtu.be" not in url:
+        url_out = url.split("?v=")[1]
+        if "&" in url_out:
+            url_out = url_out.split("&")[0]
+    else:
+        url_out = url.split("be/")[1]
+    return url_out
