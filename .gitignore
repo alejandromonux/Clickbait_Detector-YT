@@ -137,3 +137,11 @@ dmypy.json
 #Deprecated Local dbs
 DataRetrieval/post-first-class
 DataRetrieval/pre-frst-class
+Classification/BERT/saved_weights.pt
+DataRetrieval/yt_other/5-Minute Crafts.csv
+DataRetrieval/yt_other/5sc_db.json
+DataRetrieval/yt_other/clickbait.csv
+DataRetrieval/yt_other/encoded_5sc_db.json
+DataRetrieval/yt_other/encoded_other_db.json
+DataRetrieval/yt_other/notClickbait.csv
+DataRetrieval/yt_other/other_db.json
