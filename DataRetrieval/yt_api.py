@@ -3,7 +3,7 @@ import googleapiclient.discovery
 
 from Tools.files import readFile, writeFile
 
-
+#We look up the comments of a video an return an array of them
 def getVideoComments(name, id):
     # API information
     api_service_name = "youtube"
@@ -29,7 +29,7 @@ def getVideoComments(name, id):
         print("problem with Video " + name + " / ID: " + id)
     return comments
 
-
+#We get all comments from the last 50 videos of a channel
 def getChannelComments(name, id, database):
     # API information
     api_service_name = "youtube"
@@ -75,7 +75,7 @@ def getChannelComments(name, id, database):
 
     return database
 
-
+# we get the last 25 videos of each channel from a channel with id <id>
 def getVideos(name, id, database):
     # API information
     api_service_name = "youtube"
@@ -147,7 +147,7 @@ def getVideos(name, id, database):
 
     return database
 
-
+#We make a loop to obtain the last 5 comments from each video in a database
 def commentsLoop():
     channels = readFile(os.getcwd() + "\channels.json")
     database = readFile(os.getcwd() + "/adjusted_database.json")
@@ -162,6 +162,7 @@ def commentsLoop():
     print("I hem acabat!")
 
 
+#We go through a set of channels to get their last videos
 def channelLoop():
     """
     file = open("channels.json")
@@ -192,7 +193,7 @@ def channelLoop():
 
     print("I hem acabat!")
 
-
+#we gather data from a video for the web application
 def dataForTheWeb(videoID):
     # API information
     api_service_name = "youtube"
@@ -237,7 +238,7 @@ def dataForTheWeb(videoID):
     video["comments"] = getVideoComments(video["author"], videoID)
     return video
 
-
+#We get the id out of the url, no matter the format.
 def getURL(url):
     if "youtu.be" not in url:
         url_out = url.split("?v=")[1]

@@ -2,6 +2,7 @@ import csv
 import json
 import numpy as np
 
+#We manually read a CSV
 def readCSVManual(name):
     x = []
     y = []
@@ -15,6 +16,7 @@ def readCSVManual(name):
         line=file.readline()
     return x, y
 
+#We automatically read a CSV
 def readCSV(name):
     x = []
     y = []
@@ -25,6 +27,7 @@ def readCSV(name):
             y.append(line["clickbait"])
     return x,y
 
+#We read a Kaggle CSV
 def readCSVKaggle(name,rating):
     x = []
     y = []
@@ -45,12 +48,13 @@ def readCSVKaggle(name,rating):
             y.append(rating)
     return x,y
 
+#We open a json file and return it's contents
 def readFile(name):
     file = open(name, encoding="utf8")
     data = json.load(file)
     return data
 
-
+#We dump a an object into a json file
 def writeFile(name, dictionary):
     with open(name, "w") as file:
         json.dump(dictionary, file)

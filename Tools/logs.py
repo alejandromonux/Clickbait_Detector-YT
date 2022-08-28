@@ -1,6 +1,7 @@
 from Tools.files import readFile, writeFile
 
 
+#Weappenda video to the web logs
 def appendToLogs(filename,object, rating):
     db=readFile(filename)
     object["rating"] = rating
@@ -9,6 +10,8 @@ def appendToLogs(filename,object, rating):
             return 0
     db["list"].append(object)
     writeFile(filename,db)
+
+#We modify the opinion of a video in the web logs
 def modifyLogs(filename, object, opinion):
     db=readFile(filename)
     for i  in range(len(db["list"])):

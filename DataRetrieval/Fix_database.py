@@ -10,9 +10,11 @@ def ratingsFromAll():
         i += 1
     writeFile(os.getcwd() + "\database.json", database)
 
+#We check if an element can lead to doubt when classifying
 def isDubious(dubiousItem):
     return dubiousItem.capitalLetterWordsCount>=1 or dubiousItem.emojiCount >= 1 or dubiousItem.superlatives>=1 or dubiousItem.punctuationCount > 1
 
+#We manually check the database
 def dabasefix(revised_db, new_db, rating_limit, checkDubiousOnes,**kwargs):
     finish = False
     weblogs = kwargs.get("weblogs",False)
@@ -97,6 +99,7 @@ def dabasefix(revised_db, new_db, rating_limit, checkDubiousOnes,**kwargs):
     writeFile(os.getcwd() + "\\adjusted_database.json", revised_db)
     #writeFile(os.getcwd()+"\\webRequestLogs.json", new_db)
 
+#We add a database to another, moving new elements to this "old_db" from "new_db"
 def databaseAdding(old_db, new_db):
     found = False
     #TODO: REVISAR
@@ -125,6 +128,7 @@ def databaseAdding(old_db, new_db):
     print(len(new_db["list"]))
     writeFile(os.getcwd()+"\\adjusted_database.json", new_db)
 
+#We check so no elements are repeated
 def noRepeats(database):
 
     for item in database["list"]:
@@ -139,6 +143,7 @@ def noRepeats(database):
     print(len(database["list"]))
     writeFile(os.getcwd()+"\\adjusted_database.json", database)
 
+#We check al ratings from a single class
 def ReviseAllRatingsFromClass(database, rating):
     import random
     #We randomize the array for better results
@@ -166,6 +171,7 @@ def ReviseAllRatingsFromClass(database, rating):
 
     writeFile(os.getcwd()+"\\adjusted_database.json", database)
 
+#We change any rating written as an string to an integer
 def removeTheStrings(database):
 
     for item in database["list"]:
@@ -177,7 +183,8 @@ def removeTheStrings(database):
             database["list"][database["list"].index(item)]["rating"] = 2
 
     writeFile(os.getcwd()+"\\adjusted_database.json", database)
-    
+
+#Should a manual check fail due to unforseen errors, we use this to look at the terminal logs stored in a txt and recover the progress
 def contingencyPlan(logFile,database):
     with open(logFile, encoding='utf8') as f:
         lines = f.readlines()

@@ -1,6 +1,6 @@
 from sklearn.metrics import confusion_matrix, classification_report
 
-
+#We get the indices?
 def getIndices(database, split):
     out = []
     for i in range(len(database["list"])):
@@ -9,6 +9,7 @@ def getIndices(database, split):
                 out.append(i)
     return out
 
+#We train and test a model based on data passed to the function
 def trainingAndTest(classifier, train_x,train_y,test_x,test_y):
     import time
     milliseconds = time.time_ns()
@@ -34,6 +35,7 @@ def trainingAndTest(classifier, train_x,train_y,test_x,test_y):
     plt.show()
     return classifier
 
+#We check  analyze and rewrite ratings
 def CheckTheProbability(classifier, train_x,train_y,test_x,test_y,text,index):
     from Tools.files import readFile
     import os

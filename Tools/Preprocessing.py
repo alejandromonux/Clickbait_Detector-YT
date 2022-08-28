@@ -8,7 +8,7 @@ from nltk.corpus import stopwords
 from Classification.BERT.bert import bertPreprocessing, bertPreprocessingArray, bertencodingsArray
 from Tools.files import writeFile, readFile
 
-
+#We undersample the database to a limit per class
 def undersamplingDB(database, limit, classes):
     database_out = {"list":[]}
     count = [0]*classes
@@ -19,6 +19,7 @@ def undersamplingDB(database, limit, classes):
             count[database["list"][i]["rating"]]+=1
     return database_out
 
+#We preprocess a batch of elements from an array
 def arrayBERTPreprocessing(array,y):
     i = 0
     array_p = []
@@ -33,6 +34,7 @@ def arrayBERTPreprocessing(array,y):
     processedArray = bertPreprocessingArray(array_p)
     return bertencodingsArray(processedArray,array,y)
 
+#We cleanup a whole database for the bert Preprocessing
 def databaseBERTCleanup(database):
     database = readFile(database)
     i = 0
@@ -46,6 +48,7 @@ def databaseBERTCleanup(database):
         i += 1
     bertPreprocessing(database)
 
+#We do a cleanup (preprocessing) of the text in "database.json"
 def databaseCleanup(**kwargs):
     # file = open("database.json")
     # database = json.load(file)
@@ -85,6 +88,7 @@ def databaseCleanup(**kwargs):
     #    json.dump(database,file)
     writeFile(os.getcwd() + "\clean_database.json", database)
 
+#We cleanup (preprocess) a string of text
 def textCleanup(text):
     stop_words = stopwords.words('english')
 
@@ -104,6 +108,7 @@ def textCleanup(text):
 
     return outWords
 
+#The text Cleanup acts as the one from before but aimed at BERT
 def textCleanupForBert(text):
     stop_words = stopwords.words('english')
     outWords = []
@@ -120,6 +125,7 @@ def textCleanupForBert(text):
     outArray = outArray[:-1]
     return outArray
 
+#The text Cleanup acts as the one from before but aimed at VADER
 def textCleanupForVader(text):
     stop_words = stopwords.words('english')
     text = text.replace("[^a-zA-Z#]", " ")
@@ -149,5 +155,6 @@ def textCleanupForVader(text):
 
     return outSentence
 
+#The text Cleanup acts as the one from before but aimed at TFIDF
 def textCleanupForTFIDF(text):
     pass
