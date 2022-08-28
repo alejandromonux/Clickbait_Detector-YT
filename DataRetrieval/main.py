@@ -38,22 +38,25 @@ def databaseEncoding(db_option):
     bert.bertEncoding(db_option)
 
 if __name__ == "__main__":
-    option = sys.argv[1]
-    # TODO: PROBAR A USAR EL READ Y WRITE DE FILES.PY EN VEZ DE LOS DEL MAIN Y VER CÓMO FUNCIONA PARA TEMA DIRECTORIOS
-    option2 = sys.argv[2]
-    option3 = sys.argv[3]
-    # goToFunc(option)
+    #THIS MAIN IS ONLY TO BE USED IN A DEVELOPMENT ENVIRONMENT, MEANT FOR CHECKING, TESTING AND DEVELOPING THE MODEL.
+    #We get the three necessary options
+    option = sys.argv[1] #General option
+    option2 = sys.argv[2] #Specific sub-option
+    option3 = sys.argv[3] #Parameter
     if option == '1':
+        #We can either go to the channel loop or comments loop option, downloading one of the two options
         if option2 == '1':
             channelLoop()
         else:
             commentsLoop()
     elif option == '2':
+        #Option used for cleanup, a normal one or one for BERT can eb used
         if option2 == '1':
             databaseCleanup()
         else:
             databaseBERTCleanup()
     elif option == '3':
+        #Different types of encoding can be tested from here
         if option2 == '1':
             databaseEncoding(option2)
         elif option == '2':
@@ -62,6 +65,7 @@ if __name__ == "__main__":
         else:
             databaseEncoding(option2)
     elif option == '4':
+        #KMEANS is made from this option
         if option2 == '1':
             kmeans_test(int(option3))
             ratingsFromAll()
@@ -69,31 +73,27 @@ if __name__ == "__main__":
             elbowmethod()
             elbowmethod_2()
     elif option == '5':
+        #This option works to spread the ratings
         ratingsFromAll()
 
         database = readFile(os.getcwd() + "\database.json")
         for item in database["list"]:
             print(item["title"] + "\n---\n" + str(item["rating"]) + "\n|||||||||")
     elif option == '6':
+        #DEPRECATED OPTION. KEPT FOR LEGACY PURPOSES.
+        #We train the BERT Model 1.0
         fineTuningBert(os.getcwd() + "\\adjusted_database.json")
     elif option == '66':
+        #Diverse sub options
         if option2 == '1':
-            # Versión mala
-            """
-            channelLoop()
-            databaseCleanup()
-            databaseEncoding(option2)
-            kmeans_test(3)
-            ratingsFromAll()
-            """
-            #Temporalmente, versión de databaseFix
+            #We do a databaseFix
             a_db = readFile(os.getcwd() + "\\adjusted_database.json")
             db = readFile(os.getcwd() + "\webRequestLogs.json")
             dabasefix(a_db, db,int(option3), False,weblogs=True)
             #contingencyPlan("",readFile(os.getcwd() + "\\database.json"))
             pass
         elif option2 == '2':
-            # VERSIÓN BUENA
+            # we get the data, classify it with kmeans and spread the ratings
             channelLoop()
             databaseBERTCleanup(os.getcwd() + "\database.json")
             databaseEncoding(option2)
@@ -101,6 +101,7 @@ if __name__ == "__main__":
             ratingsFromAll()
             # dabasefix(readFile(os.getcwd()+"\\adjusted_database.json"),readFile(os.getcwd()+"\database.json"))
         elif option2 == '3':
+            #We add DB info forom one to another
             databaseAdding(readFile(os.getcwd() + "\old_adjusted_database.json"),
                            readFile(os.getcwd() + "\\adjusted_database.json"))
             # noRepeats(readFile(os.getcwd()+"\\adjusted_database.json"))
@@ -111,15 +112,19 @@ if __name__ == "__main__":
         else:
             removeTheStrings(readFile(os.getcwd() + "\\adjusted_database.json"))
     elif option == '7':
+        #DEPRECATED
+        #We cleanup data and train BERT model 1.0
         databaseBERTCleanup(os.getcwd() + "\\adjusted_database.json")
         # From cleanup we go on to training
         fineTuningBert(os.getcwd() + "\\BERT_clean_database.json",int(option3))
     elif option == '8':
+        #We search for the best features from the DB
         from Classification.DecisionTree.TreeLogic import getBestFeatures, findAverage
 
         getBestFeatures()
         #findAverage(int(option3),False)
     elif option == '9':
+        #We cleanup, encode and test different models
         databaseBERTCleanup(os.getcwd() + "\\adjusted_database.json")
         databaseEncoding(option2)
         NaiveBayes()
@@ -130,6 +135,7 @@ if __name__ == "__main__":
     elif option == '11':
         sentimentAnalysis(readFile(os.getcwd() + "\\adjusted_database.json"))
     elif option == '12':
+        #We test our model
         db = readFile(os.getcwd() + "\\adjusted_database.json")
         db_us= undersamplingDB(database=db,limit=1500,classes=2)
         model = Model(db_us, [[],[]])
@@ -137,6 +143,7 @@ if __name__ == "__main__":
         y,y_true,time= model.test()
         print(time)
     elif option == '13':
+        #We test our model with 10-Fold CV
         database = readFile(os.getcwd() + "\\adjusted_database.json")
         db_us= undersamplingDB(database=database,limit=1500,classes=2)
         indices = range(len(database["list"]))
@@ -159,6 +166,7 @@ if __name__ == "__main__":
         print('Cross Validation score_recall: %.3f +/- %.3f' % (np.mean(scores[:, 2]), np.std(scores[:, 2])))
 
     elif option == '14':
+        #We test our model against other DBs
         db_name = (os.getcwd()+"/yt_other/encoded_5sc_db.json") if option2=="2" else (os.getcwd()+"/yt_other/encoded_other_dbf.json")
         model = Model(readFile(os.getcwd() + "\\adjusted_database.json"), [[], []])
         if not os.path.exists(db_name):
@@ -205,7 +213,7 @@ if __name__ == "__main__":
                 print(othersDB["x"][i]["title"])
         """
     elif option == "15":
-        
+        #We test our model against other DBs
         clickbait= convertToFormat(os.getcwd()+"/yt_other/clickbait.csv",0)
         notClickbait=convertToFormat(os.getcwd()+"/yt_other/notClickbait.csv",1)
         for i in range(len(notClickbait["x"])):
@@ -229,8 +237,11 @@ if __name__ == "__main__":
 
         print(sorted(gscv.cv_results_.keys()))
     elif option == "logres":
-        classifyWithForest()
+        #DEPRECATED We test logres
+        #classifyWithForest()
+        pass
     elif option == "validarUmbral":
+        #We validate the threshold graphically
         times = []
         for i in np.arange(0,1, 0.1):
             model = Model(readFile(os.getcwd() + "\\adjusted_database.json"), [[], []],
@@ -244,8 +255,10 @@ if __name__ == "__main__":
         plt.plot(ypoints, linestyle='solid')
         plt.show()
     elif option == "DEBUGWEB":
+        #Used to debug Web methods
         dataForTheWeb("3D_I1M0dfFeck")
     elif option == "TFIDF":
+        #Performance test of TFIDF
         db = readFile(os.getcwd()+"\\adjusted_database.json")
         db_clean = db
         for i in range(len(db["list"])):
@@ -257,6 +270,7 @@ if __name__ == "__main__":
         for i in range(len(titles)): db["list"][i]["title"]=titles[i].tolist()
         writeFile(os.getcwd()+"\\encoded_database.json",db_clean)
     elif option=="PASSTHEMTOTHEMODEL":
+        #Test of the Request Logs through the model
         db = readFile(os.getcwd()+"\\webRequestLogs.json")
         model = Model(readFile(os.getcwd() + "\\adjusted_database.json"), [[], []], willImport=True)
         model.loadModel(prefix="\\")
@@ -266,6 +280,7 @@ if __name__ == "__main__":
             db["list"][i]["rating"]= output[0]
         writeFile(os.getcwd()+"\\webRequestLogs.json", db)
     elif option=="USAGESTATS":
+        #Usage Stats analysis
         y = []
         y_true = []
         db = readFile(os.getcwd() + "\\webRequestLogs.json")
@@ -291,6 +306,7 @@ if __name__ == "__main__":
         plt.show()
 
     elif option=="USERSTATS":
+        # User Stats analysis
         y = []
         y_true = []
         db = readFile(os.getcwd() + "\\webRequestLogs.json")
