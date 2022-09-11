@@ -40,7 +40,6 @@ def getChannelComments(name, id, database):
     youtube = googleapiclient.discovery.build(
         api_service_name, api_version, developerKey=DEVELOPER_KEY)
 
-    # TODO: Diferenciar entre username e id (mirar guiones y tal)
     request = youtube.channels().list(
         part="snippet,contentDetails,statistics",
         id=id,
@@ -86,7 +85,6 @@ def getVideos(name, id, database):
     youtube = googleapiclient.discovery.build(
         api_service_name, api_version, developerKey=DEVELOPER_KEY)
 
-    # TODO: Diferenciar entre username e id (mirar guiones y tal)
     request = youtube.channels().list(
         part="snippet,contentDetails,statistics",
         id=id,

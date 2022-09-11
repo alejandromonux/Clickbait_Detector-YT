@@ -102,7 +102,6 @@ def dabasefix(revised_db, new_db, rating_limit, checkDubiousOnes,**kwargs):
 #We add a database to another, moving new elements to this "old_db" from "new_db"
 def databaseAdding(old_db, new_db):
     found = False
-    #TODO: REVISAR
     for r_item in old_db["list"]:
         found = False
         for n_item in new_db["list"]:

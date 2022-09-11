@@ -204,14 +204,8 @@ if __name__ == "__main__":
         ax.yaxis.set_ticklabels(['0', '1'])
         # Display the visualization of the Confusion Matrix.
         plt.show()
-        
-        #TODO: Delete this
-        """
-        othersDB = readFile(os.getcwd() + "/yt_other/other_db.json")
-        for i in range(len(preds)):
-            if preds[i] == 1 and db["y"][i] == 0:
-                print(othersDB["x"][i]["title"])
-        """
+
+
     elif option == "15":
         #We test our model against other DBs
         clickbait= convertToFormat(os.getcwd()+"/yt_other/clickbait.csv",0)
@@ -237,8 +231,8 @@ if __name__ == "__main__":
 
         print(sorted(gscv.cv_results_.keys()))
     elif option == "logres":
-        #DEPRECATED We test logres
-        #classifyWithForest()
+        # We test logres
+        logisticRegression(os.getcwd() + "\\adjusted_database.json")
         pass
     elif option == "validarUmbral":
         #We validate the threshold graphically

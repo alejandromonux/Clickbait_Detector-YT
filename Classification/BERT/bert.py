@@ -37,7 +37,7 @@ def bertEncoding(db_option):
             # Topken to ids and segmentID
             indexed_tokens = tokenizer.convert_tokens_to_ids(tokenized)
             segments_ids = [1] * len(
-                tokenized)  # TODO: HACER UN CONTROL DE LAS ORACIONES PARA VER SI ALGUNA TIENE DOS PARTES
+                tokenized)
             # Convert inputs to PyTorch tensors
         else:
             indexed_tokens = item["title"]["tokens"]
@@ -62,7 +62,7 @@ def bertEncoding(db_option):
             # Calculate the average of all token vectors.
             sentence_embedding = torch.mean(token_vecs, dim=0)
 
-        array.insert(i,sentence_embedding.tolist()) #TODO: DELETE ARRAY
+        array.insert(i,sentence_embedding.tolist())
         database["list"][i]["title"]=sentence_embedding.tolist()
         i += 1
 
@@ -163,7 +163,7 @@ def plotTheFitting(history):
 
 #DEPRECATED
 #MAKES AVERAGE OF LAST 4 HIDDEN UNITS
-#TODO: Arreglarque pone NaN en sitios por algún motivo
+#pone NaN en sitios
 def bertEmbeddings_bad():
     array = []
     i = 0
@@ -183,7 +183,7 @@ def bertEmbeddings_bad():
         tokenized = tokenizer.tokenize(marked_text)
         #Topken to ids and segmentID
         indexed_tokens = tokenizer.convert_tokens_to_ids(tokenized)
-        segments_ids = [1] * len(tokenized) #TODO: HACER UN CONTROL DE LAS ORACIONES PARA VER SI ALGUNA TIENE DOS PARTES
+        segments_ids = [1] * len(tokenized)
         # Convert inputs to PyTorch tensors
         tokens_tensor = torch.tensor([indexed_tokens])
         segments_tensors = torch.tensor([segments_ids])
@@ -206,7 +206,7 @@ def bertEmbeddings_bad():
 
         temp = sentence_embedding.tolist()
 
-        array.insert(i,sentence_embedding.tolist()) #TODO: DELETE ARRAY
+        array.insert(i,sentence_embedding.tolist())
         database["list"][i]["title"]=sentence_embedding.tolist()
         i += 1
 
@@ -277,10 +277,10 @@ def buildDataset(database, batch_size):
     #Split the database
     train_text, temp_text, train_labels, temp_labels = train_test_split(titles, ratings,
                                                                         random_state=2018,
-                                                                        test_size=0.3)#stratify=ratings #FIXME: EL STRATIFY DA ERROR. MIRAR POR QUÉ Y CÓMO AFECTA.
+                                                                        test_size=0.3)#stratify=ratings
     val_text, test_text, val_labels, test_labels = train_test_split(temp_text, temp_labels,
                                                                     random_state=2018,
-                                                                    test_size=0.5) #,stratify=temp_labels #FIXME: EL STRATIFY DA ERROR. MIRAR POR QUÉ Y CÓMO AFECTA.
+                                                                    test_size=0.5) #,stratify=temp_labels
     from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
     train_seq = []
     train_mask = []
@@ -307,7 +307,7 @@ def buildDataset(database, batch_size):
         test_seq.append(item["tokens"])
         test_mask.append(item["attention_mask"])
 
-    #TODO: PREPROCESAR Y PONER EN CADA TENSOR TODOS LOS ARRAYS AL MISMO TAMAÑO
+    #PREPROCESAR Y PONER EN CADA TENSOR TODOS LOS ARRAYS AL MISMO TAMAÑO
     #Convertimos el train to tensors
     train_seq=  torch.tensor(adjustSizeForTensors(train_seq,0))
     train_mask= torch.tensor(adjustSizeForTensors(train_mask,1))

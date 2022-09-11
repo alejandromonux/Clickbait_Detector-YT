@@ -72,7 +72,6 @@ def getBestFeatures():
     tree = initializeTree()
     data = constructData(os.getcwd() + "\database.json",False)
     tree.fit(data["x"], data["y"])
-    # TODO: encontrar las features y cuáles son mejores
     feat_importance = tree.tree_.compute_feature_importances(
         normalize=True)  # tree.feature_importances_#tree.tree_.compute_feature_importances(normalize=False)
     print("feat importance = " + str(feat_importance))
