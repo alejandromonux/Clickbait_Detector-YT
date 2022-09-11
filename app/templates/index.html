@@ -17,9 +17,16 @@
                     {{ form.videoId(class="form-control",id="videoId", placeholder="Introduce the url",maxlength="100") }}
                     <div class="row align-items-center">
                     <div class="col"></div>
-                    <div class="mt-2 col offset-sm-1">
+                    <div id="videoFormBTN_DIV" class="mt-2 col text-center">
+                        <span id="SPINNER_form" class="sr-only" style="display: none;"></span>
                         <!-- <button type="submit" class="btn btn-danger align-self-center ">Analiza el video</button> -->
-                        {{form.submit(class="btn btn-danger align-self-center ")}}
+                        {{form.submit(id="videoFormBTN", class="btn btn-danger align-self-center ", onClick="function loading(){
+                            document.getElementById('videoFormBTN').style.display='none';
+                            document.getElementById('videoFormBTN_DIV').classList.add('spinner-border');
+                            document.getElementById('videoFormBTN_DIV').classList.remove('col');
+                            document.getElementById('videoFormBTN_DIV').setAttribute('role','status');
+                            document.getElementById('SPINNER_form').style.display='visible';
+                         }; loading()")}}
                     </div>
                     <div class="col"></div>
                 </div>
